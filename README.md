@@ -151,6 +151,10 @@ pnpm codegen        # Generate GraphQL types
 
 See [UNRAID_SETUP.md](./UNRAID_SETUP.md) for detailed setup instructions, API reference, troubleshooting, and advanced configuration.
 
+### Product Requirements Document (PRD)
+
+See the full PRD for the mobile app here: [unraid-mobile-prd.md](./unraid-mobile-prd.md)
+
 ## 🏛️ Project Structure Details
 
 ### Services Layer
