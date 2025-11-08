@@ -1,14 +1,18 @@
 {
   "expo": {
     "name": "anraid",
-    "slug": "anraid",
+    "slug": "parity",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "anraid",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.spapinwar.parity",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,7 +20,8 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.spapinwar.parity"
     },
     "web": {
       "output": "static",
@@ -39,6 +44,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3df11f1-9ec1-481c-b6f9-6d46f92ff8b8"
+      }
+    },
+    "owner": "spapinwar"
   }
 }

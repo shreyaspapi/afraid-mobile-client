@@ -18,6 +18,10 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'shippingbox.fill': 'inventory',
+  'desktopcomputer': 'computer',
+  'antenna.radiowaves.left.and.right': 'router',
+  'gearshape.fill': 'settings',
 } as IconMapping;
 
 /**
@@ -37,5 +41,7 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const iconName = MAPPING[name] ?? 'help-outline';
+
+  return <MaterialIcons color={color} size={size} name={iconName} style={style} />;
 }
