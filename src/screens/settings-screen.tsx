@@ -7,9 +7,11 @@ import { Card } from '@/src/components/ui/card';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useApolloClient } from '@apollo/client/react';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import React, { useState } from 'react';
 import {
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -17,12 +19,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function SettingsScreen() {
   const { theme, isDark, setTheme } = useTheme();
   const { logout, credentials, checkAuth } = useAuth();
   const apolloClient = useApolloClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const handleLogout = () => {
     Alert.alert(
@@ -74,12 +79,20 @@ export function SettingsScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.container} edges={['top']}>
     <ScrollView
       style={[
         styles.container,
         { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
       ]}
-      contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingBottom: 16 + tabBarHeight + insets.bottom,
+          },
+        ]}
+        contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+        keyboardShouldPersistTaps="handled"
     >
       <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>
         Settings
@@ -254,6 +267,7 @@ export function SettingsScreen() {
         </Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -263,7 +277,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
   },
   title: {
     fontSize: 28,

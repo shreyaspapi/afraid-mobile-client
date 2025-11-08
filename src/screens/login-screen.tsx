@@ -5,6 +5,7 @@
 
 import { useTheme } from '@/src/providers/theme-provider';
 import { authService } from '@/src/services/auth.service';
+import { storageService } from '@/src/services/storage.service';
 import type { UnraidCredentials } from '@/src/types/unraid.types';
 import React, { useState } from 'react';
 import {
@@ -154,6 +155,56 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
               <Text style={styles.buttonText}>Connect</Text>
             )}
           </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#c7c7cc' }]}>
+            <Text style={[styles.dividerText, { backgroundColor: isDark ? '#000000' : '#f2f2f7', color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              OR
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.demoButton,
+              {
+                backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
+                borderColor: isDark ? '#38383a' : '#c7c7cc',
+              },
+            ]}
+            onPress={async () => {
+              Alert.alert(
+                'Demo Mode',
+                'Demo mode allows you to explore the app interface without connecting to a real Unraid server.\n\nNote: All data will be simulated and no real operations will be performed.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Try Demo',
+                    onPress: async () => {
+                      setLoading(true);
+                      try {
+                        console.log('Login: Enabling demo mode...');
+                        // Enable demo mode
+                        await storageService.setDemoMode(true);
+                        console.log('Login: Demo mode enabled, triggering auth check...');
+                        
+                        // Trigger app reload with demo data
+                        onSuccess();
+                        console.log('Login: Auth check triggered');
+                      } catch (error: any) {
+                        console.error('Login: Failed to enable demo mode:', error);
+                        Alert.alert('Error', 'Failed to enable demo mode');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
+          >
+            <Text style={[styles.demoButtonText, { color: isDark ? '#ffffff' : '#007aff' }]}>
+              Try Demo Mode
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
@@ -220,6 +271,30 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 24,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dividerText: {
+    paddingHorizontal: 12,
+    fontSize: 12,
+    fontWeight: '600',
+    position: 'absolute',
+  },
+  demoButton: {
+    height: 50,
+    borderRadius: 10,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  demoButtonText: {
+    fontSize: 16,
     fontWeight: '600',
   },
   footer: {

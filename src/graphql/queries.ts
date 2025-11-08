@@ -45,6 +45,21 @@ export const GET_SYSTEM_INFO = gql`
 `;
 
 /**
+ * Query virtual machines
+ */
+export const GET_VMS = gql`
+  query GetVMs {
+    vms {
+      domain {
+        id
+        name
+        state
+      }
+    }
+  }
+`;
+
+/**
  * Query array/storage status
  */
 export const GET_ARRAY_STATUS = gql`
@@ -90,6 +105,75 @@ export const GET_DOCKER_CONTAINERS = gql`
         }
         created
       }
+    }
+  }
+`;
+
+/**
+ * Array control mutations
+ */
+export const START_ARRAY = gql`
+  mutation StartArray {
+    array {
+      setState(input: { desiredState: START }) {
+        state
+      }
+    }
+  }
+`;
+
+export const STOP_ARRAY = gql`
+  mutation StopArray {
+    array {
+      setState(input: { desiredState: STOP }) {
+        state
+      }
+    }
+  }
+`;
+
+/**
+ * Docker control mutations
+ */
+export const START_CONTAINER = gql`
+  mutation StartContainer($id: PrefixedID!) {
+    docker {
+      start(id: $id) {
+        id
+        state
+        status
+      }
+    }
+  }
+`;
+
+export const STOP_CONTAINER = gql`
+  mutation StopContainer($id: PrefixedID!) {
+    docker {
+      stop(id: $id) {
+        id
+        state
+        status
+      }
+    }
+  }
+`;
+
+/**
+ * VM control mutations
+ */
+export const START_VM = gql`
+  mutation StartVM($id: PrefixedID!) {
+    vm {
+      start(id: $id)
+    }
+  }
+`;
+
+export const STOP_VM = gql`
+  mutation StopVM($id: PrefixedID!) {
+    vm {
+      stop(id: $id)
     }
   }
 `;
@@ -181,10 +265,12 @@ export const GET_DASHBOARD_DATA = gql`
       }
       boot {
         name
+        device
         size
         fsSize
         fsFree
         fsUsed
+        fsType
       }
     }
     shares {

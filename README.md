@@ -10,7 +10,6 @@ A professional-grade React Native mobile application for monitoring and managing
 - **Auto-refresh** - Real-time updates every 5 seconds with pull-to-refresh
 - **Dark Mode** - Beautiful light and dark themes
 - **Type-Safe** - Full TypeScript coverage with GraphQL code generation
-- **Production Ready** - Follows senior-level engineering best practices
 
 ## 🏗️ Architecture
 

@@ -23,6 +23,10 @@ export const AppConfig = {
       serverIP: '@unraid_server_ip',
       apiKey: '@unraid_api_key',
       isAuthenticated: '@unraid_is_authenticated',
+      servers: '@unraid_servers', // JSON array of saved servers
+      activeServerId: '@unraid_active_server_id',
+      settings: '@unraid_app_settings', // JSON object for app settings
+      lastDashboard: '@unraid_last_dashboard', // cached dashboard payload
     },
   },
 

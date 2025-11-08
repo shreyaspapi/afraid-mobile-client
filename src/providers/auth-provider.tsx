@@ -30,6 +30,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuth = async () => {
     try {
+      // Check if we're in demo mode
+      const isDemoMode = await storageService.isDemoMode();
+      
+      if (isDemoMode) {
+        console.log('Auth: Demo mode detected');
+        // Set global flag for demo mode
+        global.__DEMO_MODE__ = true;
+        setIsAuthenticated(true);
+        setCredentials({ serverIP: 'demo', apiKey: 'demo' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Ensure demo mode is disabled
+      global.__DEMO_MODE__ = false;
+
       const isLoggedIn = await authService.isLoggedIn();
       const storedCredentials = await storageService.getCredentials();
       
@@ -57,6 +73,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       console.log('AuthProvider: Starting logout...');
+      
+      // Clear demo mode if active
+      await storageService.clearDemoMode();
+      
       await authService.logout();
       console.log('AuthProvider: Credentials cleared');
       setCredentials(null);

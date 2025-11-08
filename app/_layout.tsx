@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } fro
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { ApolloProvider } from '@/src/providers/apollo-provider';
@@ -46,6 +47,7 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
+    <SafeAreaProvider>
     <ThemeProvider>
       <AuthProvider>
         <ApolloProvider>
@@ -53,5 +55,6 @@ export default function RootLayout() {
         </ApolloProvider>
       </AuthProvider>
     </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

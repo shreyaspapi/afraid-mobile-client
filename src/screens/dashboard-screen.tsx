@@ -9,21 +9,52 @@ import { ErrorMessage } from '@/src/components/ui/error-message';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { MetricCard } from '@/src/components/ui/metric-card';
 import { ProgressBar } from '@/src/components/ui/progress-bar';
+import { START_ARRAY, STOP_ARRAY } from '@/src/graphql/queries';
 import { useDashboardData } from '@/src/hooks/useUnraidQuery';
 import { useTheme } from '@/src/providers/theme-provider';
+import { DemoDataService } from '@/src/services/demo-data.service';
 import { calculatePercentage, formatBytes, formatUptime } from '@/src/utils/formatters';
-import React, { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useMutation } from '@apollo/client/react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function DashboardScreen() {
   const { isDark } = useTheme();
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  useEffect(() => {
+    setIsDemoMode(DemoDataService.isDemoMode());
+  }, []);
+
   const { loading, error, data, refetch } = useDashboardData();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [startArray, { loading: startingArray }] = useMutation(START_ARRAY);
+  const [stopArray, { loading: stoppingArray }] = useMutation(STOP_ARRAY);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    arrayControl: false,
     processor: true,
     network: false,
     shares: false,
     disks: true,
   });
+  const onRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Ensure latest array status when screen gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+      return () => {};
+    }, [refetch])
+  );
 
   if (loading && !data) {
     return <LoadingScreen message="Loading system information..." />;
@@ -86,6 +117,7 @@ export function DashboardScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.container} edges={['top']}>
     <ScrollView
       style={[
         styles.container,
@@ -94,12 +126,24 @@ export function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
-          refreshing={loading}
-          onRefresh={() => refetch()}
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
           tintColor={isDark ? '#007aff' : '#007aff'}
         />
       }
     >
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <View style={[styles.demoBanner, { backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5', borderColor: '#34c759' }]}>
+          <Text style={[styles.demoBannerText, { color: isDark ? '#ffffff' : '#000000' }]}>
+            🎭 Demo Mode
+          </Text>
+          <Text style={[styles.demoBannerSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+            All data is simulated. Operations are disabled.
+          </Text>
+        </View>
+      )}
+
       {/* Compact Server Header */}
       {systemInfo && (
         <View style={styles.headerSection}>
@@ -196,12 +240,367 @@ export function DashboardScreen() {
                 <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
                   Array Status
                 </Text>
-                <Text style={[styles.statValue, { color: '#34c759' }]}>
+                <Text style={[
+                  styles.statValue,
+                  { color: arrayInfo.state?.toLowerCase() === 'started' ? '#34c759' : '#ff9500' }
+                ]}>
                   {arrayInfo.state}
                 </Text>
               </View>
             )}
           </View>
+        </Card>
+      )}
+
+      {/* Array Control */}
+      {arrayInfo && (
+        <Card>
+          <TouchableOpacity 
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('arrayControl')}
+          >
+            <View>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                Array Control
+              </Text>
+              <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Status: {arrayInfo.state}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: arrayInfo.state?.toLowerCase() === 'started' 
+                    ? 'rgba(52, 199, 89, 0.2)' 
+                    : 'rgba(255, 149, 0, 0.2)'
+                }
+              ]}>
+                <View style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor: arrayInfo.state?.toLowerCase() === 'started' 
+                      ? '#34c759' 
+                      : '#ff9500'
+                  }
+                ]} />
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.arrayControl ? '−' : '+'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {expandedSections.arrayControl && (
+            <>
+          {/* Start/Stop Button with Description */}
+          {arrayInfo.state?.toLowerCase() === 'started' ? (
+            <View style={styles.operationRow}>
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  {
+                    backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
+                    borderColor: '#ff3b30',
+                    opacity: (startingArray || stoppingArray) ? 0.5 : 1,
+                  }
+                ]}
+                disabled={startingArray || stoppingArray}
+                onPress={async () => {
+                  Alert.alert(
+                    'Stop Array',
+                    'Stop will take the array off-line.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Stop',
+                        style: 'destructive',
+                        onPress: async () => {
+                          if (isDemoMode) {
+                            Alert.alert('Demo Mode', 'Array operations are disabled in demo mode');
+                            return;
+                          }
+                          await stopArray();
+                          await refetch();
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
+                  STOP
+                </Text>
+              </TouchableOpacity>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                <Text style={{ fontWeight: '600' }}>Stop</Text> will take the array off-line.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.operationRow}>
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  {
+                    backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5',
+                    borderColor: '#34c759',
+                    opacity: (startingArray || stoppingArray) ? 0.5 : 1,
+                  }
+                ]}
+                disabled={startingArray || stoppingArray}
+                onPress={async () => {
+                  if (isDemoMode) {
+                    Alert.alert('Demo Mode', 'Array operations are disabled in demo mode');
+                    return;
+                  }
+                  try {
+                    await startArray();
+                    await refetch();
+                  } catch (e) {
+                    // no-op
+                  }
+                }}
+              >
+                <Text style={[styles.operationButtonText, { color: '#34c759' }]}>
+                  START
+                </Text>
+              </TouchableOpacity>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                <Text style={{ fontWeight: '600' }}>Start</Text> will bring the array online.
+              </Text>
+            </View>
+          )}
+
+          <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+
+          {/* Spin Up/Down Row */}
+          <View style={styles.operationRow}>
+            <View style={styles.twoButtonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  styles.halfButton,
+                  {
+                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                    borderColor: '#ff9500',
+                  }
+                ]}
+                disabled={arrayInfo.state?.toLowerCase() !== 'started'}
+                onPress={() => {
+                  Alert.alert(
+                    'Spin Up',
+                    'Spin up all disks immediately?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Spin Up',
+                        onPress: () => {
+                          Alert.alert('Info', 'Spin up functionality coming soon');
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <Text style={[
+                  styles.operationButtonText,
+                  { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
+                ]}>
+                  SPIN UP
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  styles.halfButton,
+                  {
+                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                    borderColor: '#ff9500',
+                  }
+                ]}
+                disabled={arrayInfo.state?.toLowerCase() !== 'started'}
+                onPress={() => {
+                  Alert.alert(
+                    'Spin Down',
+                    'Spin down all disks immediately?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Spin Down',
+                        onPress: () => {
+                          Alert.alert('Info', 'Spin down functionality coming soon');
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <Text style={[
+                  styles.operationButtonText,
+                  { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
+                ]}>
+                  SPIN DOWN
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                <Text style={{ fontWeight: '600' }}>Spin Up</Text> will immediately spin up all disks.
+              </Text>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
+                <Text style={{ fontWeight: '600' }}>Spin Down</Text> will immediately spin down all disks.
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+
+          {/* Reboot/Shutdown Row */}
+          <View style={styles.operationRow}>
+            <View style={styles.twoButtonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  styles.halfButton,
+                  {
+                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                    borderColor: '#ff9500',
+                  }
+                ]}
+                onPress={() => {
+                  Alert.alert(
+                    'Reboot',
+                    'Reboot will activate a clean system reset.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Reboot',
+                        style: 'destructive',
+                        onPress: () => {
+                          Alert.alert('Info', 'Reboot functionality coming soon');
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <Text style={[styles.operationButtonText, { color: '#ff9500' }]}>
+                  REBOOT
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.operationButton,
+                  styles.halfButton,
+                  {
+                    backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
+                    borderColor: '#ff3b30',
+                  }
+                ]}
+                onPress={() => {
+                  Alert.alert(
+                    'Shutdown',
+                    'Shutdown will activate a clean system power down.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Shutdown',
+                        style: 'destructive',
+                        onPress: () => {
+                          Alert.alert('Info', 'Shutdown functionality coming soon');
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
+                  SHUTDOWN
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                <Text style={{ fontWeight: '600' }}>Reboot</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system reset.
+              </Text>
+              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
+                <Text style={{ fontWeight: '600' }}>Shutdown</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system power down.
+              </Text>
+            </View>
+          </View>
+            </>
+          )}
+        </Card>
+      )}
+
+      {/* Boot Device */}
+      {flashDisk && (
+        <Card>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              Boot Device
+            </Text>
+          </View>
+          
+          <View style={styles.bootDeviceContainer}>
+            <View style={styles.bootDeviceRow}>
+              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Device
+              </Text>
+              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                Flash ({flashDisk.device || flashDisk.name})
+              </Text>
+            </View>
+            
+            <View style={styles.bootDeviceRow}>
+              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Filesystem
+              </Text>
+              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {flashDisk.fsType || 'vfat'}
+              </Text>
+            </View>
+            
+            <View style={styles.bootDeviceRow}>
+              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Size
+              </Text>
+              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {formatBytes(Number(flashDisk.fsSize || flashDisk.size || 0))}
+              </Text>
+            </View>
+            
+            <View style={styles.bootDeviceRow}>
+              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Used
+              </Text>
+              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {formatBytes(Number(flashDisk.fsUsed || 0))}
+              </Text>
+            </View>
+            
+            <View style={styles.bootDeviceRow}>
+              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Free
+              </Text>
+              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {formatBytes(Number(flashDisk.fsFree || 0))}
+              </Text>
+            </View>
+          </View>
+          
+          {flashDisk.fsSize && (
+            <>
+              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 12 }]} />
+              <ProgressBar
+                percentage={flashPercentage}
+                label={`${flashPercentage.toFixed(1)}% used`}
+                height={6}
+              />
+            </>
+          )}
         </Card>
       )}
 
@@ -456,6 +855,7 @@ export function DashboardScreen() {
         </Card>
       )}
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -674,5 +1074,79 @@ const styles = StyleSheet.create({
   },
   unassignedTemp: {
     fontSize: 14,
+  },
+  statusBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  operationRow: {
+    marginVertical: 8,
+  },
+  twoButtonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  operationButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 120,
+  },
+  halfButton: {
+    flex: 1,
+  },
+  operationButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  operationDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  bootDeviceContainer: {
+    gap: 8,
+  },
+  bootDeviceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  bootDeviceLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  bootDeviceValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  demoBanner: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  demoBannerText: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  demoBannerSubtext: {
+    fontSize: 13,
+    textAlign: 'center',
   },
 });
