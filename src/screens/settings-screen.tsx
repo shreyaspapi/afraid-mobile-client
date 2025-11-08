@@ -4,6 +4,8 @@
  */
 
 import { Card } from '@/src/components/ui/card';
+import { AppConfig } from '@/src/config/app.config';
+import { usePollingInterval } from '@/src/hooks/usePollingInterval';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useApolloClient } from '@apollo/client/react';
@@ -25,6 +27,7 @@ export function SettingsScreen() {
   const { theme, isDark, setTheme } = useTheme();
   const { logout, credentials, checkAuth } = useAuth();
   const apolloClient = useApolloClient();
+  const { pollingInterval, updatePollingInterval } = usePollingInterval();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
@@ -76,6 +79,36 @@ export function SettingsScreen() {
 
   const handleAutoModeToggle = async (value: boolean) => {
     await setTheme(value ? 'auto' : (isDark ? 'dark' : 'light'));
+  };
+
+  const handlePollingIntervalChange = () => {
+    const options = AppConfig.graphql.pollingIntervalOptions;
+    const currentIndex = options.findIndex(opt => opt.value === (pollingInterval || AppConfig.graphql.defaultPollInterval));
+    
+    Alert.alert(
+      'Polling Frequency',
+      'How often should the app refresh data automatically?',
+      [
+        ...options.map((option) => ({
+          text: option.label,
+          onPress: async () => {
+            try {
+              await updatePollingInterval(option.value);
+              Alert.alert('Success', `Polling frequency updated to ${option.label.toLowerCase()}`);
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to update polling frequency');
+            }
+          },
+        })),
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const getPollingIntervalLabel = () => {
+    const currentValue = pollingInterval || AppConfig.graphql.defaultPollInterval;
+    const option = AppConfig.graphql.pollingIntervalOptions.find(opt => opt.value === currentValue);
+    return option?.label || '5 seconds';
   };
 
   return (
@@ -208,9 +241,31 @@ export function SettingsScreen() {
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
           Data Refresh
         </Text>
+        
+        {/* Polling Frequency */}
+        <TouchableOpacity 
+          style={styles.infoRow}
+          onPress={handlePollingIntervalChange}
+          activeOpacity={0.7}
+        >
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
+              Polling Frequency
+            </Text>
+            <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              How often to refresh data automatically
+            </Text>
+          </View>
+          <Text style={[styles.value, { color: isDark ? '#007aff' : '#007aff' }]}>
+            {getPollingIntervalLabel()}
+          </Text>
+        </TouchableOpacity>
+        
+        <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#e5e5e5' }]} />
+        
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Auto Refresh
+            Manual Refresh
           </Text>
           <Text style={[styles.value, { color: isDark ? '#ffffff' : '#000000' }]}>
             Pull to refresh

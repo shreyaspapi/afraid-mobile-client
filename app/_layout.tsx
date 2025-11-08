@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from '@/src/providers/auth-provider';
 import { ThemeProvider, useTheme } from '@/src/providers/theme-provider';
 import { LoginScreen } from '@/src/screens/login-screen';
 
+
 export const unstable_settings = {
   anchor: '(tabs)',
 };

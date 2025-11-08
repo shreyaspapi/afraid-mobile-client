@@ -19,13 +19,16 @@ import type {
 } from '@/src/types/unraid.types';
 import { useQuery } from '@apollo/client/react';
 import { useEffect, useState } from 'react';
+import { usePollingInterval } from './usePollingInterval';
 
 /**
  * Hook to fetch system information
  */
 export function useSystemInfo(pollInterval?: number) {
+  const { pollingInterval: userPollingInterval } = usePollingInterval();
+  
   return useQuery<SystemInfoResponse>(GET_SYSTEM_INFO, {
-    pollInterval: pollInterval ?? AppConfig.graphql.defaultPollInterval,
+    pollInterval: pollInterval ?? userPollingInterval ?? AppConfig.graphql.defaultPollInterval,
     notifyOnNetworkStatusChange: true,
   });
 }
@@ -34,8 +37,10 @@ export function useSystemInfo(pollInterval?: number) {
  * Hook to fetch array/storage status
  */
 export function useArrayStatus(pollInterval?: number) {
+  const { pollingInterval: userPollingInterval } = usePollingInterval();
+  
   return useQuery<ArrayStatusResponse>(GET_ARRAY_STATUS, {
-    pollInterval: pollInterval ?? AppConfig.graphql.defaultPollInterval,
+    pollInterval: pollInterval ?? userPollingInterval ?? AppConfig.graphql.defaultPollInterval,
     notifyOnNetworkStatusChange: true,
   });
 }
@@ -46,13 +51,14 @@ export function useArrayStatus(pollInterval?: number) {
  */
 export function useDockerContainers(pollInterval?: number) {
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const { pollingInterval: userPollingInterval } = usePollingInterval();
 
   useEffect(() => {
     setIsDemoMode(DemoDataService.isDemoMode());
   }, []);
 
   const queryResult = useQuery<DockerContainersResponse>(GET_DOCKER_CONTAINERS, {
-    pollInterval: pollInterval ?? AppConfig.graphql.defaultPollInterval,
+    pollInterval: pollInterval ?? userPollingInterval ?? AppConfig.graphql.defaultPollInterval,
     notifyOnNetworkStatusChange: true,
     skip: isDemoMode,
   });
@@ -78,13 +84,14 @@ export function useDockerContainers(pollInterval?: number) {
  */
 export function useDashboardData(pollInterval?: number) {
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const { pollingInterval: userPollingInterval } = usePollingInterval();
 
   useEffect(() => {
     setIsDemoMode(DemoDataService.isDemoMode());
   }, []);
 
   const queryResult = useQuery<DashboardData>(GET_DASHBOARD_DATA, {
-    pollInterval: pollInterval ?? AppConfig.graphql.defaultPollInterval,
+    pollInterval: pollInterval ?? userPollingInterval ?? AppConfig.graphql.defaultPollInterval,
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
     nextFetchPolicy: 'no-cache',

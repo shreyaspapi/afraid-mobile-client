@@ -27,7 +27,7 @@ export function DockerScreen() {
     setIsDemoMode(DemoDataService.isDemoMode());
   }, []);
 
-  const { loading, error, data, refetch } = useDockerContainers(10000);
+  const { loading, error, data, refetch } = useDockerContainers();
   const [startContainer, { loading: starting }] = useMutation(START_CONTAINER);
   const [stopContainer, { loading: stopping }] = useMutation(STOP_CONTAINER);
 

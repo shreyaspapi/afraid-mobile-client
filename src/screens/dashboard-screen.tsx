@@ -6,10 +6,12 @@
 import { Card } from '@/src/components/ui/card';
 import { CircularProgress } from '@/src/components/ui/circular-progress';
 import { ErrorMessage } from '@/src/components/ui/error-message';
+import { LineChart } from '@/src/components/ui/line-chart';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { MetricCard } from '@/src/components/ui/metric-card';
 import { ProgressBar } from '@/src/components/ui/progress-bar';
 import { START_ARRAY, STOP_ARRAY } from '@/src/graphql/queries';
+import { useMetricsHistory } from '@/src/hooks/useMetricsHistory';
 import { useDashboardData } from '@/src/hooks/useUnraidQuery';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
@@ -17,7 +19,7 @@ import { calculatePercentage, formatBytes, formatUptime } from '@/src/utils/form
 import { useMutation } from '@apollo/client/react';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function DashboardScreen() {
@@ -39,6 +41,29 @@ export function DashboardScreen() {
     shares: false,
     disks: true,
   });
+
+  // Calculate metrics for charts (must be done before any early returns to satisfy Rules of Hooks)
+  const systemInfo = data?.info;
+  const arrayInfo = data?.array;
+  const metrics = data?.metrics;
+  const shares = data?.shares;
+  const vars = data?.vars;
+
+  // Get memory info from metrics
+  const memoryInfo = metrics?.memory;
+  const memoryPercentage = memoryInfo?.percentTotal || 
+    (memoryInfo ? calculatePercentage(Number(memoryInfo.used), Number(memoryInfo.total)) : 0);
+
+  // Get CPU usage from metrics
+  const cpuMetrics = metrics?.cpu;
+  const cpuUsage = cpuMetrics?.percentTotal || 0;
+
+  // Track metrics history for charts (must be called before any conditional returns)
+  const { cpuChartData, memoryChartData, hasEnoughData } = useMetricsHistory(
+    cpuUsage,
+    memoryPercentage
+  );
+
   const onRefresh = async () => {
     try {
       setIsRefreshing(true);
@@ -68,21 +93,6 @@ export function DashboardScreen() {
       />
     );
   }
-
-  const systemInfo = data?.info;
-  const arrayInfo = data?.array;
-  const metrics = data?.metrics;
-  const shares = data?.shares;
-  const vars = data?.vars;
-
-  // Get memory info from metrics
-  const memoryInfo = metrics?.memory;
-  const memoryPercentage = memoryInfo?.percentTotal || 
-    (memoryInfo ? calculatePercentage(Number(memoryInfo.used), Number(memoryInfo.total)) : 0);
-
-  // Get CPU usage from metrics
-  const cpuMetrics = metrics?.cpu;
-  const cpuUsage = cpuMetrics?.percentTotal || 0;
 
   // Calculate disk usage percentage
   const diskPercentage = arrayInfo
@@ -190,6 +200,49 @@ export function DashboardScreen() {
         </View>
       )}
 
+      {/* Performance Charts */}
+      {metrics && (
+        <Card>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              Performance Trends
+            </Text>
+          </View>
+          
+          {hasEnoughData ? (
+            <View style={styles.chartsContainer}>
+              <LineChart
+                data={cpuChartData}
+                width={Dimensions.get('window').width - 64}
+                height={140}
+                label="CPU Usage"
+                color="#007aff"
+                maxValue={100}
+                minValue={0}
+              />
+              
+              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 16 }]} />
+              
+              <LineChart
+                data={memoryChartData}
+                width={Dimensions.get('window').width - 64}
+                height={140}
+                label="Memory Usage"
+                color="#34c759"
+                maxValue={100}
+                minValue={0}
+              />
+            </View>
+          ) : (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={[{ fontSize: 13, color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Collecting data...
+              </Text>
+            </View>
+          )}
+        </Card>
+      )}
+
       {/* System Overview with Circular Progress */}
       {metrics && (
         <Card>
@@ -203,22 +256,22 @@ export function DashboardScreen() {
             <CircularProgress
               percentage={memoryPercentage}
               label="RAM usage"
-              size={85}
+              size={75}
             />
             <CircularProgress
               percentage={flashPercentage}
               label="Flash"
-              size={85}
+              size={75}
             />
             <CircularProgress
               percentage={diskPercentage}
               label="Storage"
-              size={85}
+              size={75}
             />
             <CircularProgress
               percentage={cpuUsage}
               label="CPU"
-              size={85}
+              size={75}
             />
           </View>
 
@@ -892,6 +945,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
+  chartsContainer: {
+    marginTop: 8,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -908,9 +964,11 @@ const styles = StyleSheet.create({
   },
   circularProgressRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingVertical: 12,
+    gap: 12,
   },
   divider: {
     height: 1,

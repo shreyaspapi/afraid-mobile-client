@@ -2,6 +2,7 @@ import { Card } from '@/src/components/ui/card';
 import { ErrorMessage } from '@/src/components/ui/error-message';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { GET_VMS, START_VM, STOP_VM } from '@/src/graphql/queries';
+import { usePollingInterval } from '@/src/hooks/usePollingInterval';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -18,13 +19,14 @@ interface VMItem {
 export function VMsScreen() {
   const { isDark } = useTheme();
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const { pollingInterval } = usePollingInterval();
 
   useEffect(() => {
     setIsDemoMode(DemoDataService.isDemoMode());
   }, []);
 
   const queryResult = useQuery<{ vms: { domain?: VMItem[]; domains?: VMItem[] } }>(GET_VMS, {
-    pollInterval: 10000,
+    pollInterval: pollingInterval,
     notifyOnNetworkStatusChange: true,
     skip: isDemoMode,
   });
