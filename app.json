@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "icon": "./assets/Parity_icon.icon",
       "bundleIdentifier": "com.spapinwar.parity",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
