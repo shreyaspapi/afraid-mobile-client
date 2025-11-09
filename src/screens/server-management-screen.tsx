@@ -2,10 +2,22 @@ import { Card } from '@/src/components/ui/card';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { storageService } from '@/src/services/storage.service';
+import {
+  Button as UiButton,
+  Form as UiForm,
+  Host as UiHost,
+  HStack as UiHStack,
+  Section as UiSection,
+  Spacer as UiSpacer,
+  Text as UiText
+} from '@expo/ui/swift-ui';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { v4 as uuidv4 } from 'uuid';
+// Simple ID generator to avoid external type dependency
+function generateId(): string {
+  return 'srv_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
 
 type SavedServer = { id: string; name: string; serverIP: string; apiKey: string };
 
@@ -35,7 +47,7 @@ export function ServerManagementScreen() {
     setBusy(true);
     try {
       const list = await storageService.getServers();
-      const next = [...list, { id: uuidv4(), name: name.trim(), serverIP: serverIP.trim(), apiKey: apiKey.trim() }];
+      const next = [...list, { id: generateId(), name: name.trim(), serverIP: serverIP.trim(), apiKey: apiKey.trim() }];
       await storageService.saveServers(next);
       setName('');
       setServerIP('');
@@ -72,8 +84,112 @@ export function ServerManagementScreen() {
     }
   };
 
+  // iOS: Use SwiftUI-based UI for native feel
+  if (Platform.OS === 'ios') {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
+        {/* RN Add Server form outside of UiHost to avoid mixing views */}
+        <View style={{ padding: 16 }}>
+          <Card>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>Add Server</Text>
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>Name</Text>
+              <TextInput
+                style={[styles.input, { 
+                  color: isDark ? '#ffffff' : '#000000',
+                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
+                  borderColor: isDark ? '#38383a' : '#c7c7cc'
+                }]}
+                placeholder="My Unraid"
+                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>Server URL</Text>
+              <TextInput
+                style={[styles.input, { 
+                  color: isDark ? '#ffffff' : '#000000',
+                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
+                  borderColor: isDark ? '#38383a' : '#c7c7cc'
+                }]}
+                placeholder="http://192.168.1.100:3001/graphql"
+                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
+                value={serverIP}
+                onChangeText={setServerIP}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>API Key</Text>
+              <TextInput
+                style={[styles.input, { 
+                  color: isDark ? '#ffffff' : '#000000',
+                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
+                  borderColor: isDark ? '#38383a' : '#c7c7cc'
+                }]}
+                placeholder="API key"
+                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
+                value={apiKey}
+                onChangeText={setApiKey}
+                autoCapitalize="none"
+                secureTextEntry
+              />
+            </View>
+            <TouchableOpacity 
+              style={[styles.primaryBtn, { opacity: busy ? 0.5 : 1 }]} 
+              disabled={busy} 
+              onPress={addServer}
+            >
+              <Text style={styles.primaryBtnText}>Add Server</Text>
+            </TouchableOpacity>
+          </Card>
+        </View>
+        {/* SwiftUI list for saved servers */}
+        <UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>
+          <UiForm>
+            <UiSection title="Saved Servers">
+              {servers.length === 0 ? (
+                <UiText size={15}>No saved servers</UiText>
+              ) : (
+                servers.map((item) => (
+                  <UiHStack key={item.id} spacing={8}>
+                    <UiText size={17}>{item.name}</UiText>
+                    <UiSpacer />
+                    <UiButton onPress={() => makeActive(item)}>
+                      <UiText size={15} color="#007aff">Make Active</UiText>
+                    </UiButton>
+                    <UiButton onPress={() => {
+                      Alert.alert(
+                        'Remove Server',
+                        `Are you sure you want to remove ${item.name}?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Remove', style: 'destructive', onPress: () => removeServer(item.id) }
+                        ]
+                      );
+                    }}>
+                      <UiText size={15} color="#ff3b30">Remove</UiText>
+                    </UiButton>
+                  </UiHStack>
+                ))
+              )}
+            </UiSection>
+          </UiForm>
+        </UiHost>
+      </SafeAreaView>
+    );
+  }
+
+  // Android and other platforms: existing React Native UI
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+  <SafeAreaView
+    style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
+    edges={['top']}
+  >
       <FlatList
         style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
         contentContainerStyle={styles.content}

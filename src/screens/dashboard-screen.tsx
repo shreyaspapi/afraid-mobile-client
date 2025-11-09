@@ -127,7 +127,10 @@ export function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
+      edges={['top']}
+    >
     <ScrollView
       style={[
         styles.container,

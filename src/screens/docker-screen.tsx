@@ -6,9 +6,21 @@ import { useDockerContainers } from '@/src/hooks/useUnraidQuery';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation } from '@apollo/client/react';
+import {
+  Button as UiButton,
+  Form as UiForm,
+  Host as UiHost,
+  HStack as UiHStack,
+  Image as UiImage,
+  Section as UiSection,
+  Spacer as UiSpacer,
+  Text as UiText
+} from '@expo/ui/swift-ui';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, FlatList, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { glassEffect, padding } = require('@expo/ui/swift-ui/modifiers');
 
 interface ContainerItem {
   id: string;
@@ -36,6 +48,27 @@ export function DockerScreen() {
     // Support both shapes: docker.containers or dockerContainers
     return a?.docker?.containers || a?.dockerContainers || [];
   }, [data]);
+
+  const [search, setSearch] = useState('');
+  const filteredContainers = useMemo(() => {
+    if (!search.trim()) return containers;
+    const q = search.trim().toLowerCase();
+    return containers.filter((c) => {
+      const name = (c.names && c.names[0]) || '';
+      return (
+        name.toLowerCase().includes(q) ||
+        (c.image || '').toLowerCase().includes(q) ||
+        (c.status || '').toLowerCase().includes(q)
+      );
+    });
+  }, [containers, search]);
+
+  const totals = useMemo(() => {
+    const total = containers.length;
+    const running = containers.filter((c) => c.state?.toLowerCase() === 'running').length;
+    const stopped = total - running;
+    return { total, running, stopped };
+  }, [containers]);
 
   const friendlyError = useMemo(() => {
     if (!error) return null;
@@ -103,6 +136,32 @@ export function DockerScreen() {
     }
   };
 
+  const showActionsFor = (item: ContainerItem) => {
+    const isRunning = item.state?.toLowerCase() === 'running';
+    const options = [isRunning ? 'Stop' : 'Start', 'Restart', 'Cancel'];
+    const destructiveButtonIndex = isRunning ? 0 : undefined;
+    const cancelButtonIndex = 2;
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+        destructiveButtonIndex,
+        title: (item.names && item.names[0]) || item.id,
+      },
+      async (buttonIndex) => {
+        if (buttonIndex === 0) {
+          if (isRunning) {
+            await onStop(item.id);
+          } else {
+            await onStart(item.id);
+          }
+        } else if (buttonIndex === 1) {
+          await onRestart(item.id);
+        }
+      }
+    );
+  };
+
   const renderItem = ({ item }: { item: ContainerItem }) => {
     const isRunning = item.state?.toLowerCase() === 'running';
     return (
@@ -146,7 +205,63 @@ export function DockerScreen() {
     );
   };
 
-  return (
+	// iOS: Use SwiftUI-based UI for native feel
+	if (Platform.OS === 'ios') {
+		return (
+			<SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
+
+				<UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>
+					<UiForm>
+						<UiSection title="Overview">
+							<UiHStack spacing={12}>
+								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
+									<UiText size={22}>{totals.total.toString()}</UiText>
+									<UiSpacer />
+									<UiText size={13}>Total</UiText>
+								</UiHStack>
+								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
+									<UiText size={22} color="green">{totals.running.toString()}</UiText>
+									<UiSpacer />
+									<UiText size={13}>Running</UiText>
+								</UiHStack>
+								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
+									<UiText size={22} color="red">{totals.stopped.toString()}</UiText>
+									<UiSpacer />
+									<UiText size={13}>Stopped</UiText>
+								</UiHStack>
+							</UiHStack>
+						</UiSection>
+
+						<UiSection title="Containers">
+							{filteredContainers.length === 0 ? <UiText size={15}>No containers found</UiText> : null}
+							{filteredContainers.map((item) => {
+								const isRunning = item.state?.toLowerCase() === 'running';
+								const name = (item.names && item.names[0]) || item.id;
+								const uptime =
+									(item.status && (item.status.split(',').find((s) => s.trim().toLowerCase().startsWith('up')) || '').trim()) ||
+									(item.status || '');
+								return (
+									<UiHStack key={item.id} spacing={12}>
+										{/* Status dot (small) */}
+										<UiText size={12} color={isRunning ? 'green' : 'red'}>●</UiText>
+										<UiText size={17}>{name}</UiText>
+										<UiSpacer />
+										<UiText size={15}>{uptime}</UiText>
+										<UiButton onPress={() => showActionsFor(item)}>
+											<UiImage systemName="ellipsis.circle" />
+										</UiButton>
+									</UiHStack>
+								);
+							})}
+						</UiSection>
+					</UiForm>
+				</UiHost>
+			</SafeAreaView>
+		);
+	}
+
+	// Android and other platforms: existing React Native UI
+	return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
         style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}

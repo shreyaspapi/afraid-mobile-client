@@ -9,7 +9,17 @@ import { usePollingInterval } from '@/src/hooks/usePollingInterval';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useApolloClient } from '@apollo/client/react';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import {
+  Button as UiButton,
+  Form as UiForm,
+  Host as UiHost,
+  HStack as UiHStack,
+  Image as UiImage,
+  Section as UiSection,
+  Spacer as UiSpacer,
+  Switch as UiSwitch,
+  Text as UiText,
+} from '@expo/ui/swift-ui';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -23,6 +33,23 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+function useAdaptiveBottomTabPadding() {
+  const insets = useSafeAreaInsets();
+  // With NativeTabs on iOS, there is no React Navigation Bottom Tabs context.
+  if (Platform.OS === 'ios') {
+    return insets.bottom;
+  }
+  try {
+    // Dynamically require to avoid initializing the hook on iOS.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useBottomTabBarHeight } = require('@react-navigation/bottom-tabs');
+    const height: number = useBottomTabBarHeight();
+    return height + insets.bottom;
+  } catch {
+    return insets.bottom;
+  }
+}
+
 export function SettingsScreen() {
   const { theme, isDark, setTheme } = useTheme();
   const { logout, credentials, checkAuth } = useAuth();
@@ -30,7 +57,7 @@ export function SettingsScreen() {
   const { pollingInterval, updatePollingInterval } = usePollingInterval();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
+  const bottomTabPadding = useAdaptiveBottomTabPadding();
 
   const handleLogout = () => {
     Alert.alert(
@@ -111,6 +138,112 @@ export function SettingsScreen() {
     return option?.label || '5 seconds';
   };
 
+  if (Platform.OS === 'ios') {
+    // Native iOS-styled Settings using Expo UI (SwiftUI)
+    return (
+      <SafeAreaView 
+      style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
+      edges={['top']}
+      >
+        <UiHost style={{ flex: 1 }}>
+          <UiForm>
+            <UiSection title="Appearance">
+              <UiHStack spacing={8}>
+                <UiImage systemName="aqi.medium" />
+                <UiText size={17}>Appearance</UiText>
+                <UiSpacer />
+                <UiSwitch value={isDark} onValueChange={() => {}} />
+              </UiHStack>
+            </UiSection>
+
+            <UiSection title="Data Refresh">
+              <UiButton
+                onPress={handlePollingIntervalChange}
+              >
+                <UiHStack spacing={8}>
+                  <UiImage systemName="speedometer" />
+                  <UiText size={17}>Polling Frequency</UiText>
+                  <UiSpacer />
+                  <UiText size={17}>{getPollingIntervalLabel()}</UiText>
+                </UiHStack>
+              </UiButton>
+              <UiHStack spacing={8}>
+                <UiImage systemName="arrow.clockwise" />
+                <UiText size={17}>Manual Refresh</UiText>
+                <UiSpacer />
+                <UiText size={17}>Pull to refresh</UiText>
+              </UiHStack>
+            </UiSection>
+
+            <UiSection title="Server Information">
+              <UiHStack spacing={8}>
+                <UiImage systemName="network" />
+                <UiText size={17}>Server IP</UiText>
+                <UiSpacer />
+                <UiText size={17}>{credentials?.serverIP || 'Not connected'}</UiText>
+              </UiHStack>
+              <UiHStack spacing={8}>
+                <UiImage systemName="checkmark.circle.fill" />
+                <UiText size={17}>Connection Status</UiText>
+                <UiSpacer />
+                <UiText size={17}>Connected</UiText>
+              </UiHStack>
+              <UiHStack spacing={8}>
+                <UiImage systemName="info.circle" />
+                <UiText size={17}>Version</UiText>
+                <UiSpacer />
+                <UiText size={17}>1.0.0</UiText>
+              </UiHStack>
+              <UiHStack spacing={8}>
+                <UiImage systemName="paintbrush.fill" />
+                <UiText size={17}>Current Theme</UiText>
+                <UiSpacer />
+                <UiText size={17}>{isDark ? 'Dark' : 'Light'}</UiText>
+              </UiHStack>
+            </UiSection>
+
+            <UiSection title="Actions">
+              <UiButton
+                onPress={() => {
+                  Alert.alert(
+                    'Clear Cache',
+                    'This will clear all cached data and refresh from the server.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Clear',
+                        onPress: async () => {
+                          await apolloClient.clearStore();
+                          Alert.alert('Success', 'Cache cleared successfully');
+                        },
+                      },
+                    ]
+                  );
+                }}
+              >
+                <UiHStack spacing={8}>
+                  <UiImage systemName="trash" />
+                  <UiText size={17}>Clear Cache</UiText>
+                  <UiSpacer />
+                </UiHStack>
+              </UiButton>
+              <UiButton
+                onPress={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <UiHStack spacing={8}>
+                  <UiImage systemName="rectangle.portrait.and.arrow.right" />
+                  <UiText size={17}>{isLoggingOut ? 'Logging out...' : 'Logout'}</UiText>
+                  <UiSpacer />
+                </UiHStack>
+              </UiButton>
+            </UiSection>
+          </UiForm>
+        </UiHost>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
     <ScrollView
@@ -121,10 +254,10 @@ export function SettingsScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingBottom: 16 + tabBarHeight + insets.bottom,
+            paddingBottom: 16 + bottomTabPadding,
           },
         ]}
-        contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+        contentInsetAdjustmentBehavior={Platform.select({ ios: 'automatic', default: undefined }) as any}
         keyboardShouldPersistTaps="handled"
     >
       <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>
