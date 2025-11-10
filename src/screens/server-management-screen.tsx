@@ -1,18 +1,29 @@
 import { Card } from '@/src/components/ui/card';
 import { SavedServer, useServerManagement } from '@/src/hooks/useServerManagement';
 import { useTheme } from '@/src/providers/theme-provider';
-import {
-  Button as UiButton,
-  Form as UiForm,
-  Host as UiHost,
-  HStack as UiHStack,
-  Section as UiSection,
-  Spacer as UiSpacer,
-  Text as UiText
-} from '@expo/ui/swift-ui';
 import React from 'react';
 import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Conditionally import native SwiftUI components only on iOS
+let UiButton: any;
+let UiForm: any;
+let UiHost: any;
+let UiHStack: any;
+let UiSection: any;
+let UiSpacer: any;
+let UiText: any;
+
+if (Platform.OS === 'ios') {
+  const swiftUIModule = require('@expo/ui/swift-ui');
+  UiButton = swiftUIModule.Button;
+  UiForm = swiftUIModule.Form;
+  UiHost = swiftUIModule.Host;
+  UiHStack = swiftUIModule.HStack;
+  UiSection = swiftUIModule.Section;
+  UiSpacer = swiftUIModule.Spacer;
+  UiText = swiftUIModule.Text;
+}
 
 export function ServerManagementScreen() {
   const { isDark } = useTheme();
@@ -31,7 +42,7 @@ export function ServerManagementScreen() {
   } = useServerManagement();
 
   // iOS: Use SwiftUI-based UI for native feel
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === 'ios' && UiHost) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
         {/* RN Add Server form outside of UiHost to avoid mixing views */}

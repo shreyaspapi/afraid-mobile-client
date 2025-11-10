@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { ApolloProvider } from '@/src/providers/apollo-provider';
 import { AuthProvider, useAuth } from '@/src/providers/auth-provider';
+import { LocalizationProvider } from '@/src/providers/localization-provider';
 import { ThemeProvider, useTheme } from '@/src/providers/theme-provider';
 import { LoginScreen } from '@/src/screens/login-screen';
 
@@ -54,13 +55,15 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-    <ThemeProvider>
-      <AuthProvider>
-        <ApolloProvider>
-          <RootNavigator />
-        </ApolloProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      <LocalizationProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ApolloProvider>
+              <RootNavigator />
+            </ApolloProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </LocalizationProvider>
     </SafeAreaProvider>
   );
 }

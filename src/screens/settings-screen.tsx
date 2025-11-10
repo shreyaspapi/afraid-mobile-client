@@ -3,23 +3,14 @@
  * App settings and account management with dark mode toggle
  */
 
+import { AlertDialog } from '@/src/components/ui/alert-dialog';
 import { Card } from '@/src/components/ui/card';
 import { AppConfig } from '@/src/config/app.config';
 import { usePollingInterval } from '@/src/hooks/usePollingInterval';
 import { useAuth } from '@/src/providers/auth-provider';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useApolloClient } from '@apollo/client/react';
-import {
-  Button as UiButton,
-  Form as UiForm,
-  Host as UiHost,
-  HStack as UiHStack,
-  Image as UiImage,
-  Section as UiSection,
-  Spacer as UiSpacer,
-  Switch as UiSwitch,
-  Text as UiText,
-} from '@expo/ui/swift-ui';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -33,6 +24,30 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Conditionally import native SwiftUI components only on iOS
+let UiButton: any;
+let UiForm: any;
+let UiHost: any;
+let UiHStack: any;
+let UiImage: any;
+let UiSection: any;
+let UiSpacer: any;
+let UiSwitch: any;
+let UiText: any;
+
+if (Platform.OS === 'ios') {
+  const swiftUIModule = require('@expo/ui/swift-ui');
+  UiButton = swiftUIModule.Button;
+  UiForm = swiftUIModule.Form;
+  UiHost = swiftUIModule.Host;
+  UiHStack = swiftUIModule.HStack;
+  UiImage = swiftUIModule.Image;
+  UiSection = swiftUIModule.Section;
+  UiSpacer = swiftUIModule.Spacer;
+  UiSwitch = swiftUIModule.Switch;
+  UiText = swiftUIModule.Text;
+}
 
 function useAdaptiveBottomTabPadding() {
   const insets = useSafeAreaInsets();
@@ -54,9 +69,12 @@ function useAdaptiveBottomTabPadding() {
 export function SettingsScreen() {
   const { theme, isDark, setTheme } = useTheme();
   const { logout, credentials, checkAuth } = useAuth();
+  const { locale, setLocale, availableLocales } = useLocalization();
+  const { t } = useLocalization();
   const apolloClient = useApolloClient();
   const { pollingInterval, updatePollingInterval } = usePollingInterval();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLanguageAlert, setShowLanguageAlert] = useState(false);
   const insets = useSafeAreaInsets();
   const bottomTabPadding = useAdaptiveBottomTabPadding();
   const router = useRouter();
@@ -140,7 +158,35 @@ export function SettingsScreen() {
     return option?.label || '5 seconds';
   };
 
-  if (Platform.OS === 'ios') {
+  const handleLanguageChange = () => {
+    if (Platform.OS === 'web') {
+      setShowLanguageAlert(true);
+    } else {
+      const languageOptions = Object.entries(availableLocales).map(([code, name]) => ({
+        text: name,
+        onPress: async () => {
+          try {
+            await setLocale(code as any);
+            Alert.alert('Success', `Language changed to ${name}`);
+          } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to change language');
+          }
+        },
+      }));
+
+      Alert.alert(
+        t('settings.language') || 'Language',
+        t('settings.selectLanguage') || 'Select your preferred language',
+        [...languageOptions, { text: t('common.cancel') || 'Cancel', style: 'cancel' }]
+      );
+    }
+  };
+
+  const getCurrentLanguageName = () => {
+    return availableLocales[locale] || 'English';
+  };
+
+  if (Platform.OS === 'ios' && UiHost) {
     // Native iOS-styled Settings using Expo UI (SwiftUI)
     return (
       <SafeAreaView
@@ -156,6 +202,18 @@ export function SettingsScreen() {
                 <UiSpacer />
                 <UiSwitch value={isDark} onValueChange={() => {}} />
               </UiHStack>
+            </UiSection>
+
+            <UiSection title={t('settings.language') || 'Language'}>
+              <UiButton onPress={handleLanguageChange}>
+                <UiHStack spacing={8}>
+                  <UiImage systemName="globe" />
+                  <UiText size={17}>{t('settings.language') || 'Language'}</UiText>
+                  <UiSpacer />
+                  <UiText size={17}>{getCurrentLanguageName()}</UiText>
+                  <UiImage systemName="chevron.right" />
+                </UiHStack>
+              </UiButton>
             </UiSection>
 
             <UiSection title="Management">
@@ -323,6 +381,30 @@ export function SettingsScreen() {
         )}
       </Card>
 
+      {/* Language */}
+      <Card>
+        <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+          {t('settings.language') || 'Language'}
+        </Text>
+        <TouchableOpacity 
+          style={styles.infoRow}
+          onPress={handleLanguageChange}
+          activeOpacity={0.7}
+        >
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {t('settings.language') || 'Language'}
+            </Text>
+            <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              {t('settings.selectLanguage') || 'Select your preferred language'}
+            </Text>
+          </View>
+          <Text style={[styles.value, { color: isDark ? '#007aff' : '#007aff' }]}>
+            {getCurrentLanguageName()}
+          </Text>
+        </TouchableOpacity>
+      </Card>
+
       {/* Server Information */}
       <Card>
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
@@ -478,6 +560,31 @@ export function SettingsScreen() {
         </Text>
       </View>
     </ScrollView>
+
+    {Platform.OS === 'web' && (
+      <AlertDialog
+        visible={showLanguageAlert}
+        title={t('settings.language') || 'Language'}
+        message={t('settings.selectLanguage') || 'Select your preferred language'}
+        buttons={[
+          ...Object.entries(availableLocales).map(([code, name]) => ({
+            text: name,
+            style: code === locale ? 'default' : 'default' as const,
+            onPress: async () => {
+              try {
+                await setLocale(code as any);
+                setShowLanguageAlert(false);
+              } catch (error: any) {
+                console.error('Failed to change language:', error);
+                setShowLanguageAlert(false);
+              }
+            }
+          })),
+          { text: t('common.cancel') || 'Cancel', style: 'cancel' as const, onPress: () => setShowLanguageAlert(false) }
+        ]}
+        onDismiss={() => setShowLanguageAlert(false)}
+      />
+    )}
     </SafeAreaView>
   );
 }
