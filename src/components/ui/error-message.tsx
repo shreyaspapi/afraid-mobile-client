@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 
 interface ErrorMessageProps {
@@ -14,6 +15,7 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
 
   return (
     <View
@@ -45,7 +47,7 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
               { color: isDark ? '#007aff' : '#007aff' },
             ]}
           >
-            Retry
+            {t('common.retry')}
           </Text>
         </TouchableOpacity>
       )}

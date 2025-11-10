@@ -9,6 +9,7 @@ import type { UnraidCredentials } from '@/src/types/unraid.types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEMO_MODE_KEY = '@unraid:demo_mode';
+const LOCALE_KEY = '@unraid:locale';
 
 class StorageService {
   /**
@@ -206,6 +207,26 @@ class StorageService {
       await AsyncStorage.setItem(AppConfig.storage.keys.apiKey, apiKey);
     } catch (error) {
       throw new Error(`Failed to update API key: ${error}`);
+    }
+  }
+
+  /**
+   * Locale management
+   */
+  async getLocale(): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(LOCALE_KEY);
+    } catch (error) {
+      console.error('Failed to retrieve locale:', error);
+      return null;
+    }
+  }
+
+  async setLocale(locale: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(LOCALE_KEY, locale);
+    } catch (error) {
+      console.error('Failed to save locale:', error);
     }
   }
 }

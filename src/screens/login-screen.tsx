@@ -3,6 +3,7 @@
  * Handles user authentication with Unraid server
  */
 
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { authService } from '@/src/services/auth.service';
 import { storageService } from '@/src/services/storage.service';
@@ -29,15 +30,16 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
+  const { t } = useLocalization();
 
   const validateInputs = (): boolean => {
     if (!serverIP.trim()) {
-      Alert.alert('Error', 'Please enter your Unraid server IP address');
+      Alert.alert(t('common.error'), t('login.errorNoServerIP'));
       return false;
     }
 
     if (!apiKey.trim()) {
-      Alert.alert('Error', 'Please enter your API key');
+      Alert.alert(t('common.error'), t('login.errorNoApiKey'));
       return false;
     }
 
@@ -61,10 +63,10 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
         // The ApolloProvider will recreate the client with new credentials
         onSuccess();
       } else {
-        Alert.alert('Connection Failed', result.error || 'Unable to connect to Unraid server');
+        Alert.alert(t('login.connectionFailed'), result.error || t('login.connectionFailedMessage'));
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'An unexpected error occurred');
+      Alert.alert(t('common.error'), error.message || t('errors.generic'));
     } finally {
       setLoading(false);
     }
@@ -81,20 +83,20 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>
-            Connect to Unraid
+            {t('login.title')}
           </Text>
           <Text style={[styles.subtitle, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Enter your server details to get started
+            {t('login.subtitle')}
           </Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              Server IP Address
+              {t('login.serverIP')}
             </Text>
             <TextInput
-              placeholder="http://192.168.21.1:3001/graphql"
+              placeholder={t('login.serverIPPlaceholder')}
               placeholderTextColor={isDark ? '#48484a' : '#c7c7cc'}
               value={serverIP}
               onChangeText={setServerIP}
@@ -111,16 +113,16 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
               ]}
             />
             <Text style={[styles.hint, { color: isDark ? '#48484a' : '#8e8e93' }]}>
-              Enter complete URL (e.g., http://192.168.21.1:3001/graphql)
+              {t('login.serverIPHint')}
             </Text>
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              API Key
+              {t('login.apiKey')}
             </Text>
             <TextInput
-              placeholder="Enter your API key"
+              placeholder={t('login.apiKeyPlaceholder')}
               placeholderTextColor={isDark ? '#48484a' : '#c7c7cc'}
               value={apiKey}
               onChangeText={setApiKey}
@@ -137,7 +139,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
               ]}
             />
             <Text style={[styles.hint, { color: isDark ? '#48484a' : '#8e8e93' }]}>
-              Generate an API key using: unraid-api apikey --create
+              {t('login.apiKeyHint')}
             </Text>
           </View>
 
@@ -152,13 +154,13 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.buttonText}>Connect</Text>
+              <Text style={styles.buttonText}>{t('login.connect')}</Text>
             )}
           </TouchableOpacity>
 
           <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#c7c7cc' }]}>
             <Text style={[styles.dividerText, { backgroundColor: isDark ? '#000000' : '#f2f2f7', color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              OR
+              {t('login.or')}
             </Text>
           </View>
 
@@ -172,12 +174,12 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
             ]}
             onPress={async () => {
               Alert.alert(
-                'Demo Mode',
-                'Demo mode allows you to explore the app interface without connecting to a real Unraid server.\n\nNote: All data will be simulated and no real operations will be performed.',
+                t('login.demoModeTitle'),
+                t('login.demoModeMessage'),
                 [
-                  { text: 'Cancel', style: 'cancel' },
+                  { text: t('common.cancel'), style: 'cancel' },
                   {
-                    text: 'Try Demo',
+                    text: t('login.demoModeButton'),
                     onPress: async () => {
                       setLoading(true);
                       try {
@@ -191,7 +193,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
                         console.log('Login: Auth check triggered');
                       } catch (error: any) {
                         console.error('Login: Failed to enable demo mode:', error);
-                        Alert.alert('Error', 'Failed to enable demo mode');
+                        Alert.alert(t('common.error'), t('login.demoModeError'));
                       } finally {
                         setLoading(false);
                       }
@@ -202,14 +204,14 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
             }}
           >
             <Text style={[styles.demoButtonText, { color: isDark ? '#ffffff' : '#007aff' }]}>
-              Try Demo Mode
+              {t('login.tryDemo')}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: isDark ? '#48484a' : '#8e8e93' }]}>
-            Make sure your device is on the same network as your Unraid server
+            {t('login.footer')}
           </Text>
         </View>
       </View>
