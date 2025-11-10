@@ -319,32 +319,20 @@ export function DashboardScreen() {
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
                 Array Control
               </Text>
-              <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              <Text style={[
+                styles.compactSubtext, 
+                { 
+                  color: arrayInfo.state?.toLowerCase() === 'started' 
+                    ? '#34c759' 
+                    : (isDark ? '#8e8e93' : '#6e6e73')
+                }
+              ]}>
                 Status: {arrayInfo.state}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={[
-                styles.statusBadge,
-                {
-                  backgroundColor: arrayInfo.state?.toLowerCase() === 'started' 
-                    ? 'rgba(52, 199, 89, 0.2)' 
-                    : 'rgba(255, 149, 0, 0.2)'
-                }
-              ]}>
-                <View style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor: arrayInfo.state?.toLowerCase() === 'started' 
-                      ? '#34c759' 
-                      : '#ff9500'
-                  }
-                ]} />
-              </View>
-              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-                {expandedSections.arrayControl ? '−' : '+'}
-              </Text>
-            </View>
+            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+              {expandedSections.arrayControl ? '−' : '+'}
+            </Text>
           </TouchableOpacity>
 
           {expandedSections.arrayControl && (
