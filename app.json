@@ -11,6 +11,14 @@
       "supportsTablet": true,
       "icon": "./assets/Parity_icon.icon",
       "bundleIdentifier": "com.spapinwar.parity",
+      "splash": {
+        "image": "./assets/images/splash_screen.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff",
+        "dark": {
+          "backgroundColor": "#000000"
+        }
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
