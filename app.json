@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "anraid",
+    "name": "Parity",
     "slug": "parity",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "anraid",
+    "scheme": "parity",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,

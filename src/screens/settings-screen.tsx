@@ -6,7 +6,6 @@
 import { Card } from '@/src/components/ui/card';
 import { AppConfig } from '@/src/config/app.config';
 import { usePollingInterval } from '@/src/hooks/usePollingInterval';
-import { SavedServer, useServerManagement } from '@/src/hooks/useServerManagement';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useApolloClient } from '@apollo/client/react';
@@ -21,6 +20,7 @@ import {
   Switch as UiSwitch,
   Text as UiText,
 } from '@expo/ui/swift-ui';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -30,7 +30,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -59,20 +59,7 @@ export function SettingsScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const insets = useSafeAreaInsets();
   const bottomTabPadding = useAdaptiveBottomTabPadding();
-
-  const {
-    servers,
-    name: newServerName,
-    serverIP: newServerUrl,
-    apiKey: newServerApiKey,
-    busy: serverBusy,
-    setName: setNewServerName,
-    setServerIP: setNewServerUrl,
-    setApiKey: setNewServerApiKey,
-    addServer: addNewServer,
-    removeServer: removeSavedServer,
-    makeActive: makeServerActive,
-  } = useServerManagement();
+  const router = useRouter();
 
   const handleLogout = () => {
     Alert.alert(
@@ -153,21 +140,6 @@ export function SettingsScreen() {
     return option?.label || '5 seconds';
   };
 
-  const handleRemoveServer = (server: SavedServer) => {
-    Alert.alert(
-      'Remove Server',
-      `Are you sure you want to remove ${server.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeSavedServer(server.id),
-        },
-      ]
-    );
-  };
-
   if (Platform.OS === 'ios') {
     // Native iOS-styled Settings using Expo UI (SwiftUI)
     return (
@@ -175,84 +147,6 @@ export function SettingsScreen() {
         style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
         edges={['top']}
       >
-        <View style={{ padding: 16 }}>
-          <Card>
-            <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Add Server
-            </Text>
-            <View style={styles.serverField}>
-              <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Name
-              </Text>
-              <TextInput
-                style={[
-                  styles.serverInput,
-                  {
-                    color: isDark ? '#ffffff' : '#000000',
-                    backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                    borderColor: isDark ? '#38383a' : '#c7c7cc',
-                  },
-                ]}
-                placeholder="My Unraid"
-                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-                value={newServerName}
-                onChangeText={setNewServerName}
-                autoCapitalize="none"
-              />
-            </View>
-            <View style={styles.serverField}>
-              <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Server URL
-              </Text>
-              <TextInput
-                style={[
-                  styles.serverInput,
-                  {
-                    color: isDark ? '#ffffff' : '#000000',
-                    backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                    borderColor: isDark ? '#38383a' : '#c7c7cc',
-                  },
-                ]}
-                placeholder="http://192.168.1.100:3001/graphql"
-                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-                value={newServerUrl}
-                onChangeText={setNewServerUrl}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            <View style={styles.serverField}>
-              <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                API Key
-              </Text>
-              <TextInput
-                style={[
-                  styles.serverInput,
-                  {
-                    color: isDark ? '#ffffff' : '#000000',
-                    backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                    borderColor: isDark ? '#38383a' : '#c7c7cc',
-                  },
-                ]}
-                placeholder="API key"
-                placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-                value={newServerApiKey}
-                onChangeText={setNewServerApiKey}
-                autoCapitalize="none"
-                secureTextEntry
-              />
-            </View>
-            <TouchableOpacity
-              style={[styles.serverPrimaryBtn, { opacity: serverBusy ? 0.5 : 1 }]}
-              disabled={serverBusy}
-              onPress={addNewServer}
-            >
-              <Text style={styles.serverPrimaryBtnText}>
-                {serverBusy ? 'Working…' : 'Add Server'}
-              </Text>
-            </TouchableOpacity>
-          </Card>
-        </View>
         <UiHost style={{ flex: 1 }}>
           <UiForm>
             <UiSection title="Appearance">
@@ -262,6 +156,17 @@ export function SettingsScreen() {
                 <UiSpacer />
                 <UiSwitch value={isDark} onValueChange={() => {}} />
               </UiHStack>
+            </UiSection>
+
+            <UiSection title="Management">
+              <UiButton onPress={() => router.push('/servers')}>
+                <UiHStack spacing={8}>
+                  <UiImage systemName="server.rack" />
+                  <UiText size={17}>Servers</UiText>
+                  <UiSpacer />
+                  <UiImage systemName="chevron.right" />
+                </UiHStack>
+              </UiButton>
             </UiSection>
 
             <UiSection title="Data Refresh">
@@ -306,29 +211,6 @@ export function SettingsScreen() {
                 <UiSpacer />
                 <UiText size={17}>{isDark ? 'Dark' : 'Light'}</UiText>
               </UiHStack>
-            </UiSection>
-
-            <UiSection title="Saved Servers">
-              {servers.length === 0 ? (
-                <UiText size={15}>No saved servers</UiText>
-              ) : (
-                servers.map((item) => (
-                  <UiHStack key={item.id} spacing={8}>
-                    <UiText size={17}>{item.name}</UiText>
-                    <UiSpacer />
-                    <UiButton disabled={serverBusy} onPress={() => makeServerActive(item)}>
-                      <UiText size={15} color="#007aff">
-                        {serverBusy ? 'Working…' : 'Make Active'}
-                      </UiText>
-                    </UiButton>
-                    <UiButton disabled={serverBusy} onPress={() => handleRemoveServer(item)}>
-                      <UiText size={15} color="#ff3b30">
-                        Remove
-                      </UiText>
-                    </UiButton>
-                  </UiHStack>
-                ))
-              )}
             </UiSection>
 
             <UiSection title="Actions">
@@ -473,132 +355,17 @@ export function SettingsScreen() {
 
         {/* Server Management */}
         <Card>
-          <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-            Server Management
-          </Text>
-          <View style={styles.serverField}>
-            <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              Name
-            </Text>
-            <TextInput
-              style={[
-                styles.serverInput,
-                {
-                  color: isDark ? '#ffffff' : '#000000',
-                  borderColor: isDark ? '#38383a' : '#d1d1d6',
-                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                },
-              ]}
-              placeholder="My Unraid"
-              placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-              value={newServerName}
-              onChangeText={setNewServerName}
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.serverField}>
-            <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              Server URL
-            </Text>
-            <TextInput
-              style={[
-                styles.serverInput,
-                {
-                  color: isDark ? '#ffffff' : '#000000',
-                  borderColor: isDark ? '#38383a' : '#d1d1d6',
-                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                },
-              ]}
-              placeholder="http://192.168.1.100:3001/graphql"
-              placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-              value={newServerUrl}
-              onChangeText={setNewServerUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={styles.serverField}>
-            <Text style={[styles.serverLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              API Key
-            </Text>
-            <TextInput
-              style={[
-                styles.serverInput,
-                {
-                  color: isDark ? '#ffffff' : '#000000',
-                  borderColor: isDark ? '#38383a' : '#d1d1d6',
-                  backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                },
-              ]}
-              placeholder="API key"
-              placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
-              value={newServerApiKey}
-              onChangeText={setNewServerApiKey}
-              autoCapitalize="none"
-              secureTextEntry
-            />
-          </View>
-          <TouchableOpacity
-            style={[styles.serverPrimaryBtn, { opacity: serverBusy ? 0.5 : 1 }]}
-            disabled={serverBusy}
-            onPress={addNewServer}
-          >
-            <Text style={styles.serverPrimaryBtnText}>
-              {serverBusy ? 'Working…' : 'Add Server'}
-            </Text>
+          <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/servers')} activeOpacity={0.7}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
+                Servers
+              </Text>
+              <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Manage saved servers
+              </Text>
+            </View>
+            <Text style={[styles.value, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>›</Text>
           </TouchableOpacity>
-          <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#e5e5e5' }]} />
-          {servers.length === 0 ? (
-            <Text style={[styles.serverEmptyText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              No saved servers
-            </Text>
-          ) : (
-            servers.map((item) => (
-              <View key={item.id} style={styles.serverRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.serverNameText, { color: isDark ? '#ffffff' : '#000000' }]}>
-                    {item.name}
-                  </Text>
-                  <Text
-                    style={[styles.serverUrlText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}
-                    numberOfLines={1}
-                  >
-                    {item.serverIP}
-                  </Text>
-                </View>
-                <View style={styles.serverActions}>
-                  <TouchableOpacity
-                    style={[
-                      styles.serverActionBtn,
-                      {
-                        borderColor: isDark ? '#38383a' : '#d1d1d6',
-                        backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                      },
-                    ]}
-                    disabled={serverBusy}
-                    onPress={() => makeServerActive(item)}
-                  >
-                    <Text style={[styles.serverActionText, { color: '#007aff' }]}>
-                      {serverBusy ? 'Working…' : 'Make Active'}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.serverActionBtn,
-                      {
-                        borderColor: isDark ? '#38383a' : '#d1d1d6',
-                        backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
-                      },
-                    ]}
-                    disabled={serverBusy}
-                    onPress={() => handleRemoveServer(item)}
-                  >
-                    <Text style={[styles.serverActionText, { color: '#ff3b30' }]}>Remove</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
-          )}
         </Card>
 
       {/* App Information */}

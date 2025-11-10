@@ -6,16 +6,8 @@ import { usePollingInterval } from '@/src/hooks/usePollingInterval';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useQuery } from '@apollo/client/react';
-import {
-  Divider as UiDivider,
-  Form as UiForm,
-  Host as UiHost,
-  Text as UiText,
-  VStack as UiVStack,
-  Section as UiSection,
-} from '@expo/ui/swift-ui';
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Linking, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NotificationTypeValue = 'UNREAD' | 'ARCHIVE';
@@ -444,51 +436,6 @@ export function NotificationsScreen() {
     </>
   );
 
-  if (Platform.OS === 'ios') {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
-        ]}
-        edges={['top']}
-      >
-        <UiHost style={{ flex: 1 }}>
-          <UiForm>
-            <UiSection>
-              <UiVStack spacing={16}>
-                <UiText size={34} weight="bold">
-                  Notifications
-                </UiText>
-                <UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-                  Stay on top of system events and alerts
-                </UiText>
-                <UiDivider />
-                <View>{summaryCard}</View>
-                <UiDivider />
-                <UiText size={15} weight="semibold">
-                  Filters
-                </UiText>
-                <View>{filterControls}</View>
-              </UiVStack>
-            </UiSection>
-            <UiSection title="Activity">
-              {notifications.length === 0 ? (
-                <UiText size={15}>No notifications match the selected filters.</UiText>
-              ) : (
-                <UiVStack spacing={12}>
-                  {notifications.map((item) => (
-                    <View key={item.id}>{renderNotificationItem({ item })}</View>
-                  ))}
-                </UiVStack>
-              )}
-            </UiSection>
-          </UiForm>
-        </UiHost>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView
       style={[
@@ -523,6 +470,15 @@ export function NotificationsScreen() {
             >
               Notifications
             </Text>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: isDark ? '#8e8e93' : '#6e6e73' },
+              ]}
+            >
+              Stay on top of system events and alerts
+            </Text>
+            <View style={{ height: 12 }} />
             {summaryCard}
             {filterControls}
           </>
@@ -555,6 +511,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  subtitle: {
+    fontSize: 15,
+    marginBottom: 8,
   },
   chipRow: {
     flexDirection: 'row',
