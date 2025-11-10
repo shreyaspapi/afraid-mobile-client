@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router';
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 import { Platform } from 'react-native';
 
@@ -7,10 +6,22 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+// Conditionally import native tabs only on iOS
+let NativeTabs: any;
+let Icon: any;
+let Label: any;
+
+if (Platform.OS === 'ios') {
+  const nativeTabsModule = require('expo-router/unstable-native-tabs');
+  NativeTabs = nativeTabsModule.NativeTabs;
+  Icon = nativeTabsModule.Icon;
+  Label = nativeTabsModule.Label;
+}
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === 'ios' && NativeTabs) {
     // Use native system tabs with Liquid Glass design on iOS
     return (
       <NativeTabs>

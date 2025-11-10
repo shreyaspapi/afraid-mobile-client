@@ -181,6 +181,7 @@ export default {
     title: 'Settings',
     theme: 'Theme',
     language: 'Language',
+    selectLanguage: 'Select your preferred language',
     about: 'About',
     version: 'Version',
     logout: 'Logout',

@@ -6,25 +6,51 @@ import { useDockerContainers } from '@/src/hooks/useUnraidQuery';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation } from '@apollo/client/react';
-import {
-  Button as UiButton,
-  Chart as UiChart,
-  Divider as UiDivider,
-  Form as UiForm,
-  Host as UiHost,
-  HStack as UiHStack,
-  Image as UiImage,
-  Section as UiSection,
-  Spacer as UiSpacer,
-  Text as UiText,
-  VStack as UiVStack
-} from '@expo/ui/swift-ui';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActionSheetIOS, Alert, FlatList, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { glassEffect, padding, frame, layoutPriority, containerShape, RoundedRectangularShape } =
-  require('@expo/ui/swift-ui/modifiers');
+
+// Conditionally import native SwiftUI components only on iOS
+let UiButton: any;
+let UiChart: any;
+let UiDivider: any;
+let UiForm: any;
+let UiHost: any;
+let UiHStack: any;
+let UiImage: any;
+let UiSection: any;
+let UiSpacer: any;
+let UiText: any;
+let UiVStack: any;
+let glassEffect: any;
+let padding: any;
+let frame: any;
+let layoutPriority: any;
+let containerShape: any;
+let RoundedRectangularShape: any;
+
+if (Platform.OS === 'ios') {
+  const swiftUIModule = require('@expo/ui/swift-ui');
+  UiButton = swiftUIModule.Button;
+  UiChart = swiftUIModule.Chart;
+  UiDivider = swiftUIModule.Divider;
+  UiForm = swiftUIModule.Form;
+  UiHost = swiftUIModule.Host;
+  UiHStack = swiftUIModule.HStack;
+  UiImage = swiftUIModule.Image;
+  UiSection = swiftUIModule.Section;
+  UiSpacer = swiftUIModule.Spacer;
+  UiText = swiftUIModule.Text;
+  UiVStack = swiftUIModule.VStack;
+  
+  const modifiersModule = require('@expo/ui/swift-ui/modifiers');
+  glassEffect = modifiersModule.glassEffect;
+  padding = modifiersModule.padding;
+  frame = modifiersModule.frame;
+  layoutPriority = modifiersModule.layoutPriority;
+  containerShape = modifiersModule.containerShape;
+  RoundedRectangularShape = modifiersModule.RoundedRectangularShape;
+}
 
 interface ContainerItem {
   id: string;
@@ -223,7 +249,7 @@ export function DockerScreen() {
   };
 
 	// iOS: Use SwiftUI-based UI for native feel
-	if (Platform.OS === 'ios') {
+	if (Platform.OS === 'ios' && UiHost) {
 		return (
 			<SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
 				<UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>

@@ -3,6 +3,7 @@
  * Handles user authentication with Unraid server
  */
 
+import { AlertDialog, type AlertButton } from '@/src/components/ui/alert-dialog';
 import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { authService } from '@/src/services/auth.service';
@@ -29,6 +30,9 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [serverIP, setServerIP] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDemoAlert, setShowDemoAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isDark } = useTheme();
   const { t } = useLocalization();
 
@@ -172,35 +176,39 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
                 borderColor: isDark ? '#38383a' : '#c7c7cc',
               },
             ]}
-            onPress={async () => {
-              Alert.alert(
-                t('login.demoModeTitle'),
-                t('login.demoModeMessage'),
-                [
-                  { text: t('common.cancel'), style: 'cancel' },
-                  {
-                    text: t('login.demoModeButton'),
-                    onPress: async () => {
-                      setLoading(true);
-                      try {
-                        console.log('Login: Enabling demo mode...');
-                        // Enable demo mode
-                        await storageService.setDemoMode(true);
-                        console.log('Login: Demo mode enabled, triggering auth check...');
-                        
-                        // Trigger app reload with demo data
-                        onSuccess();
-                        console.log('Login: Auth check triggered');
-                      } catch (error: any) {
-                        console.error('Login: Failed to enable demo mode:', error);
-                        Alert.alert(t('common.error'), t('login.demoModeError'));
-                      } finally {
-                        setLoading(false);
+            onPress={() => {
+              if (Platform.OS === 'web') {
+                setShowDemoAlert(true);
+              } else {
+                Alert.alert(
+                  t('login.demoModeTitle'),
+                  t('login.demoModeMessage'),
+                  [
+                    { text: t('common.cancel'), style: 'cancel' },
+                    {
+                      text: t('login.demoModeButton'),
+                      onPress: async () => {
+                        setLoading(true);
+                        try {
+                          console.log('Login: Enabling demo mode...');
+                          // Enable demo mode
+                          await storageService.setDemoMode(true);
+                          console.log('Login: Demo mode enabled, triggering auth check...');
+                          
+                          // Trigger app reload with demo data
+                          onSuccess();
+                          console.log('Login: Auth check triggered');
+                        } catch (error: any) {
+                          console.error('Login: Failed to enable demo mode:', error);
+                          Alert.alert(t('common.error'), t('login.demoModeError'));
+                        } finally {
+                          setLoading(false);
+                        }
                       }
                     }
-                  }
-                ]
-              );
+                  ]
+                );
+              }
             }}
           >
             <Text style={[styles.demoButtonText, { color: isDark ? '#ffffff' : '#007aff' }]}>
@@ -215,6 +223,54 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
           </Text>
         </View>
       </View>
+
+      {Platform.OS === 'web' && (
+        <AlertDialog
+          visible={showDemoAlert}
+          title={t('login.demoModeTitle')}
+          message={t('login.demoModeMessage')}
+          buttons={[
+            { text: t('common.cancel'), style: 'cancel', onPress: () => setShowDemoAlert(false) },
+            {
+              text: t('login.demoModeButton'),
+              style: 'default',
+              onPress: async () => {
+                setLoading(true);
+                try {
+                  console.log('Login: Enabling demo mode...');
+                  // Enable demo mode
+                  await storageService.setDemoMode(true);
+                  console.log('Login: Demo mode enabled, triggering auth check...');
+                  
+                  // Trigger app reload with demo data
+                  onSuccess();
+                  console.log('Login: Auth check triggered');
+                } catch (error: any) {
+                  console.error('Login: Failed to enable demo mode:', error);
+                  setShowDemoAlert(false);
+                  setErrorMessage(error?.message || t('login.demoModeError'));
+                  setShowErrorAlert(true);
+                } finally {
+                  setLoading(false);
+                }
+              }
+            }
+          ]}
+          onDismiss={() => setShowDemoAlert(false)}
+        />
+      )}
+
+      {Platform.OS === 'web' && (
+        <AlertDialog
+          visible={showErrorAlert}
+          title={t('common.error')}
+          message={errorMessage}
+          buttons={[
+            { text: t('common.ok') || 'OK', style: 'default', onPress: () => setShowErrorAlert(false) }
+          ]}
+          onDismiss={() => setShowErrorAlert(false)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
