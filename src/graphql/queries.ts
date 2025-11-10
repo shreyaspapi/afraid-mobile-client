@@ -60,6 +60,41 @@ export const GET_VMS = gql`
 `;
 
 /**
+ * Query notifications overview and list
+ */
+export const GET_NOTIFICATIONS = gql`
+  query GetNotifications($filter: NotificationFilter!) {
+    notifications {
+      overview {
+        unread {
+          info
+          warning
+          alert
+          total
+        }
+        archive {
+          info
+          warning
+          alert
+          total
+        }
+      }
+      list(filter: $filter) {
+        id
+        title
+        subject
+        description
+        importance
+        type
+        link
+        timestamp
+        formattedTimestamp
+      }
+    }
+  }
+`;
+
+/**
  * Query array/storage status
  */
 export const GET_ARRAY_STATUS = gql`

@@ -1,7 +1,30 @@
 {
-  "name": "anraid",
-  "main": "expo-router/entry",
+  "name": "parity",
+  "displayName": "Parity: Unraid Client",
   "version": "1.0.0",
+  "description": "A modern, feature-rich mobile app for monitoring and managing your Unraid servers",
+  "main": "expo-router/entry",
+  "author": "Parity Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shreyaspapi/parity.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shreyaspapi/parity/issues"
+  },
+  "homepage": "https://github.com/shreyaspapi/parity#readme",
+  "keywords": [
+    "unraid",
+    "mobile",
+    "react-native",
+    "expo",
+    "server-management",
+    "docker",
+    "vm",
+    "monitoring",
+    "graphql"
+  ],
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",

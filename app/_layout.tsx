@@ -39,6 +39,11 @@ function RootNavigator() {
     <NavigationThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="servers" options={{ title: 'Servers' }} />
+        <Stack.Screen
+          name="add-server"
+          options={{ title: 'Add Server', presentation: 'modal' }}
+        />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />

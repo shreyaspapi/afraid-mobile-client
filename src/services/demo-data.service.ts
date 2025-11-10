@@ -1016,6 +1016,169 @@ export const DEMO_VMS_DATA: GetVmsQuery = {
   },
 };
 
+type DemoNotificationCounts = {
+  info: number;
+  warning: number;
+  alert: number;
+  total: number;
+};
+
+type DemoNotificationItem = {
+  id: string;
+  title: string;
+  subject: string;
+  description: string;
+  importance: 'ALERT' | 'WARNING' | 'INFO';
+  type: 'UNREAD' | 'ARCHIVE';
+  link?: string | null;
+  timestamp?: string | null;
+  formattedTimestamp?: string | null;
+};
+
+type DemoNotificationsData = {
+  notifications: {
+    overview: {
+      unread: DemoNotificationCounts;
+      archive: DemoNotificationCounts;
+    };
+    list: DemoNotificationItem[];
+  };
+};
+
+export const DEMO_NOTIFICATIONS_DATA: DemoNotificationsData = {
+  notifications: {
+    overview: {
+      unread: {
+        info: 3,
+        warning: 2,
+        alert: 1,
+        total: 6,
+      },
+      archive: {
+        info: 4,
+        warning: 1,
+        alert: 0,
+        total: 5,
+      },
+    },
+    list: [
+      {
+        id: 'demo:notification:1',
+        title: 'Parity check completed',
+        subject: 'Array status',
+        description: 'Last scheduled parity check completed successfully with zero errors detected.',
+        importance: 'INFO',
+        type: 'UNREAD',
+        formattedTimestamp: '5 minutes ago',
+        timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:2',
+        title: 'Docker container update available',
+        subject: 'Plex Media Server',
+        description: 'A new version of the Plex container is available. Review the changelog before updating.',
+        importance: 'WARNING',
+        type: 'UNREAD',
+        formattedTimestamp: '14 minutes ago',
+        timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+        link: 'https://support.plex.tv/articles/201904005-update-plex-media-server/',
+      },
+      {
+        id: 'demo:notification:3',
+        title: 'Array disk temperature warning',
+        subject: 'Disk 3 (sdd)',
+        description: 'Disk temperature reached 49°C which exceeds the configured warning threshold.',
+        importance: 'WARNING',
+        type: 'UNREAD',
+        formattedTimestamp: '37 minutes ago',
+        timestamp: new Date(Date.now() - 37 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:4',
+        title: 'Critical SMART error detected',
+        subject: 'Disk 5 (sdf)',
+        description: 'SMART attribute 197 (Current Pending Sector Count) exceeded the critical threshold.',
+        importance: 'ALERT',
+        type: 'UNREAD',
+        formattedTimestamp: '1 hour ago',
+        timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        link: 'https://wiki.unraid.net/Manual/Storage_Management#SMART_attributes',
+      },
+      {
+        id: 'demo:notification:5',
+        title: 'Flash backup completed',
+        subject: 'Backup to Dropbox',
+        description: 'Flash drive backup to Dropbox finished successfully.',
+        importance: 'INFO',
+        type: 'UNREAD',
+        formattedTimestamp: '2 hours ago',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:6',
+        title: 'System update available',
+        subject: 'Unraid OS 6.12.5',
+        description: 'A new Unraid OS release is available with bug fixes and security updates.',
+        importance: 'INFO',
+        type: 'UNREAD',
+        formattedTimestamp: '3 hours ago',
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        link: 'https://wiki.unraid.net/Manual/Release_Notes',
+      },
+      {
+        id: 'demo:notification:7',
+        title: 'Docker update applied',
+        subject: 'Nextcloud',
+        description: 'Docker container was updated to version 27.1.2. Restart required to apply changes.',
+        importance: 'INFO',
+        type: 'ARCHIVE',
+        formattedTimestamp: 'Yesterday',
+        timestamp: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:8',
+        title: 'VM started',
+        subject: 'Windows 11 Workstation',
+        description: 'Virtual machine was started by user admin from the dashboard.',
+        importance: 'INFO',
+        type: 'ARCHIVE',
+        formattedTimestamp: 'Yesterday',
+        timestamp: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:9',
+        title: 'Mover finished transferring cache contents',
+        subject: 'Cache to array',
+        description: 'Scheduled mover operation completed successfully.',
+        importance: 'INFO',
+        type: 'ARCHIVE',
+        formattedTimestamp: '2 days ago',
+        timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:10',
+        title: 'UPS on battery',
+        subject: 'APC Back-UPS Pro',
+        description: 'Power outage detected. Server running on battery backup. Estimated runtime 58 minutes.',
+        importance: 'WARNING',
+        type: 'ARCHIVE',
+        formattedTimestamp: '2 days ago',
+        timestamp: new Date(Date.now() - 50 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'demo:notification:11',
+        title: 'Network link restored',
+        subject: 'eth0',
+        description: 'Network connectivity restored after brief interruption.',
+        importance: 'INFO',
+        type: 'ARCHIVE',
+        formattedTimestamp: '3 days ago',
+        timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+  },
+};
+
 export class DemoDataService {
   static isDemoMode(): boolean {
     // Check if we're in demo mode
@@ -1040,6 +1203,10 @@ export class DemoDataService {
 
   static getVMsData(): GetVmsQuery {
     return DEMO_VMS_DATA;
+  }
+
+  static getNotificationsData(): DemoNotificationsData {
+    return DEMO_NOTIFICATIONS_DATA;
   }
 }
 

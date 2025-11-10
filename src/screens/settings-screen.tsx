@@ -20,6 +20,7 @@ import {
   Switch as UiSwitch,
   Text as UiText,
 } from '@expo/ui/swift-ui';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -29,7 +30,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -58,6 +59,7 @@ export function SettingsScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const insets = useSafeAreaInsets();
   const bottomTabPadding = useAdaptiveBottomTabPadding();
+  const router = useRouter();
 
   const handleLogout = () => {
     Alert.alert(
@@ -141,9 +143,9 @@ export function SettingsScreen() {
   if (Platform.OS === 'ios') {
     // Native iOS-styled Settings using Expo UI (SwiftUI)
     return (
-      <SafeAreaView 
-      style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
-      edges={['top']}
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
+        edges={['top']}
       >
         <UiHost style={{ flex: 1 }}>
           <UiForm>
@@ -156,10 +158,19 @@ export function SettingsScreen() {
               </UiHStack>
             </UiSection>
 
+            <UiSection title="Management">
+              <UiButton onPress={() => router.push('/servers')}>
+                <UiHStack spacing={8}>
+                  <UiImage systemName="server.rack" />
+                  <UiText size={17}>Servers</UiText>
+                  <UiSpacer />
+                  <UiImage systemName="chevron.right" />
+                </UiHStack>
+              </UiButton>
+            </UiSection>
+
             <UiSection title="Data Refresh">
-              <UiButton
-                onPress={handlePollingIntervalChange}
-              >
+              <UiButton onPress={handlePollingIntervalChange}>
                 <UiHStack spacing={8}>
                   <UiImage systemName="speedometer" />
                   <UiText size={17}>Polling Frequency</UiText>
@@ -227,10 +238,7 @@ export function SettingsScreen() {
                   <UiSpacer />
                 </UiHStack>
               </UiButton>
-              <UiButton
-                onPress={handleLogout}
-                disabled={isLoggingOut}
-              >
+              <UiButton onPress={handleLogout} disabled={isLoggingOut}>
                 <UiHStack spacing={8}>
                   <UiImage systemName="rectangle.portrait.and.arrow.right" />
                   <UiText size={17}>{isLoggingOut ? 'Logging out...' : 'Logout'}</UiText>
@@ -344,6 +352,21 @@ export function SettingsScreen() {
           </View>
         </View>
       </Card>
+
+        {/* Server Management */}
+        <Card>
+          <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/servers')} activeOpacity={0.7}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
+                Servers
+              </Text>
+              <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                Manage saved servers
+              </Text>
+            </View>
+            <Text style={[styles.value, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>›</Text>
+          </TouchableOpacity>
+        </Card>
 
       {/* App Information */}
       <Card>
@@ -539,5 +562,66 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
+  },
+  serverField: {
+    marginBottom: 12,
+  },
+  serverLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  serverInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+  },
+  serverPrimaryBtn: {
+    marginTop: 4,
+    marginBottom: 12,
+    backgroundColor: '#007aff',
+    borderRadius: 8,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  serverPrimaryBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  serverEmptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  serverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  serverNameText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  serverUrlText: {
+    fontSize: 12,
+  },
+  serverActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  serverActionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#d1d1d6',
+  },
+  serverActionText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
