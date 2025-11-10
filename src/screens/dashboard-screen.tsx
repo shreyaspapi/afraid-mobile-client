@@ -149,7 +149,7 @@ export function DashboardScreen() {
       {isDemoMode && (
         <View style={[styles.demoBanner, { backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5', borderColor: '#34c759' }]}>
           <Text style={[styles.demoBannerText, { color: isDark ? '#ffffff' : '#000000' }]}>
-            🎭 Demo Mode
+            Demo Mode
           </Text>
           <Text style={[styles.demoBannerSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
             All data is simulated. Operations are disabled.

@@ -26,7 +26,7 @@
 		DB7A33BAF9AEB366347DD544 /* Pods-anraid.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-anraid.debug.xcconfig"; path = "Target Support Files/Pods-anraid/Pods-anraid.debug.xcconfig"; sourceTree = "<group>"; };
 		DBC91D2E6D4701F19EE4EF6F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-anraid/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		E087500BA9736A971EEC0F39 /* libPods-anraid.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-anraid.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E6CE134395A3FB0191ACBAF9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = anraid/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E6CE134395A3FB0191ACBAF9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = anraid/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = anraid/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* anraid-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "anraid-Bridging-Header.h"; path = "anraid/anraid-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -81,7 +81,6 @@
 				DB7A33BAF9AEB366347DD544 /* Pods-anraid.debug.xcconfig */,
 				7B6BBA2935FE234D5BE34E4D /* Pods-anraid.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -345,6 +344,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = anraid/anraid.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J3LH4H9AA4;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -363,7 +363,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.spapinwar.parity;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beauth.parity;
 				PRODUCT_NAME = anraid;
 				SWIFT_OBJC_BRIDGING_HEADER = "anraid/anraid-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -381,6 +381,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = anraid/anraid.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J3LH4H9AA4;
 				INFOPLIST_FILE = anraid/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -394,7 +395,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.spapinwar.parity;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beauth.parity;
 				PRODUCT_NAME = anraid;
 				SWIFT_OBJC_BRIDGING_HEADER = "anraid/anraid-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

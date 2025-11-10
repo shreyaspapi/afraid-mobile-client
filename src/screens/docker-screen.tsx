@@ -8,19 +8,23 @@ import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation } from '@apollo/client/react';
 import {
   Button as UiButton,
+  Chart as UiChart,
+  Divider as UiDivider,
   Form as UiForm,
   Host as UiHost,
   HStack as UiHStack,
   Image as UiImage,
   Section as UiSection,
   Spacer as UiSpacer,
-  Text as UiText
+  Text as UiText,
+  VStack as UiVStack
 } from '@expo/ui/swift-ui';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActionSheetIOS, Alert, FlatList, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { glassEffect, padding } = require('@expo/ui/swift-ui/modifiers');
+const { glassEffect, padding, frame, layoutPriority, containerShape, RoundedRectangularShape } =
+  require('@expo/ui/swift-ui/modifiers');
 
 interface ContainerItem {
   id: string;
@@ -69,6 +73,19 @@ export function DockerScreen() {
     const stopped = total - running;
     return { total, running, stopped };
   }, [containers]);
+
+  const pieData = useMemo(() => {
+    if (totals.total === 0) {
+      return [
+        { x: 'No Data', y: 1, color: isDark ? '#2c2c2e' : '#d1d1d6' },
+      ];
+    }
+    const slices = [
+      { x: 'Running', y: totals.running, color: '#34c759' },
+      { x: 'Stopped', y: totals.stopped, color: '#ff3b30' },
+    ].filter((slice) => slice.y > 0);
+    return slices.length > 0 ? slices : [{ x: 'Total', y: totals.total, color: '#007aff' }];
+  }, [isDark, totals]);
 
   const friendlyError = useMemo(() => {
     if (!error) return null;
@@ -209,27 +226,87 @@ export function DockerScreen() {
 	if (Platform.OS === 'ios') {
 		return (
 			<SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
-
 				<UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>
 					<UiForm>
-						<UiSection title="Overview">
-							<UiHStack spacing={12}>
-								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
-									<UiText size={22}>{totals.total.toString()}</UiText>
+						{/* Widget-style overview card */}
+						<UiSection>
+							<UiVStack
+								alignment="leading"
+								spacing={20}
+								modifiers={[padding({ all: 24 })]}
+							>
+								<UiHStack alignment="center" spacing={20} modifiers={[frame({ maxWidth: Number.POSITIVE_INFINITY })]}>
+									<UiVStack alignment="leading" spacing={8} modifiers={[layoutPriority(1)]}>
+										<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>Docker</UiText>
+										<UiText size={34} weight="bold">
+											{totals.total === 0 ? 'No Data' : `${totals.total}`}
+										</UiText>
+									</UiVStack>
+
 									<UiSpacer />
-									<UiText size={13}>Total</UiText>
+
+									<UiChart
+										data={pieData}
+										type="pie"
+										animate
+										pieStyle={{
+											innerRadius: totals.total === 0 ? 0.45 : 0.6,
+											angularInset: totals.total === 0 ? 0 : 6,
+										}}
+										modifiers={[frame({ width: 140, height: 140 })]}
+									/>
 								</UiHStack>
-								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
-									<UiText size={22} color="green">{totals.running.toString()}</UiText>
-									<UiSpacer />
-									<UiText size={13}>Running</UiText>
-								</UiHStack>
-								<UiHStack spacing={4} modifiers={[padding({ all: 12 }), glassEffect({ glass: { variant: 'regular' } })]}>
-									<UiText size={22} color="red">{totals.stopped.toString()}</UiText>
-									<UiSpacer />
-									<UiText size={13}>Stopped</UiText>
-								</UiHStack>
-							</UiHStack>
+
+								<UiDivider />
+
+								<UiVStack spacing={16} modifiers={[frame({ maxWidth: Number.POSITIVE_INFINITY })]}>
+									<UiHStack spacing={12} alignment="center">
+										<UiText size={24} color="#007aff">●</UiText>
+										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
+											<UiText size={17} weight="semibold">Total</UiText>
+											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
+												{totals.total === 0 ? 'No containers detected' : 'Combined containers'}
+											</UiText>
+										</UiVStack>
+										<UiSpacer />
+										<UiText size={20} weight="semibold" color={isDark ? '#ffffff' : '#000000'}>
+											{`${totals.total}`}
+										</UiText>
+									</UiHStack>
+
+									<UiDivider />
+
+									<UiHStack spacing={12} alignment="center">
+										<UiText size={24} color="#34c759">●</UiText>
+										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
+											<UiText size={17} weight="semibold">Running</UiText>
+											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
+												{totals.running === 0 ? 'No containers active' : 'Currently active'}
+											</UiText>
+										</UiVStack>
+										<UiSpacer />
+										<UiText size={20} weight="semibold" color={isDark ? '#ffffff' : '#000000'}>
+                        {`${totals.running}`}
+										</UiText>
+									</UiHStack>
+
+									<UiDivider />
+
+									<UiHStack spacing={12} alignment="center">
+										<UiText size={24} color="#ff3b30">●</UiText>
+										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
+											<UiText size={17} weight="semibold">Stopped</UiText>
+											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
+												{totals.stopped === 0 ? 'No containers stopped' : 'Currently inactive'}
+											</UiText>
+										</UiVStack>
+										<UiSpacer />
+										<UiText size={20} weight="semibold" color={isDark ? '#ffffff' : '#000000'}>
+											{`${totals.stopped}`}
+										</UiText>
+									</UiHStack>
+								</UiVStack>
+							</UiVStack>
 						</UiSection>
 
 						<UiSection title="Containers">
