@@ -26,9 +26,9 @@ export default function TabLayout() {
           <Icon sf="desktopcomputer" />
           <Label>VMs</Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="servers">
-          <Icon sf="antenna.radiowaves.left.and.right" />
-          <Label>Servers</Label>
+        <NativeTabs.Trigger name="notifications">
+          <Icon sf="bell.badge.fill" />
+          <Label>Notifications</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="explore">
           <Icon sf="gearshape.fill" />
@@ -68,10 +68,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="servers"
+        name="notifications"
         options={{
-          title: 'Servers',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="antenna.radiowaves.left.and.right" color={color} />,
+          title: 'Notifications',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bell.badge.fill" color={color} />,
         }}
       />
       <Tabs.Screen

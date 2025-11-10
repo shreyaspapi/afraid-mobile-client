@@ -1,7 +1,6 @@
 import { Card } from '@/src/components/ui/card';
-import { useAuth } from '@/src/providers/auth-provider';
+import { SavedServer, useServerManagement } from '@/src/hooks/useServerManagement';
 import { useTheme } from '@/src/providers/theme-provider';
-import { storageService } from '@/src/services/storage.service';
 import {
   Button as UiButton,
   Form as UiForm,
@@ -11,78 +10,25 @@ import {
   Spacer as UiSpacer,
   Text as UiText
 } from '@expo/ui/swift-ui';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// Simple ID generator to avoid external type dependency
-function generateId(): string {
-  return 'srv_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-}
-
-type SavedServer = { id: string; name: string; serverIP: string; apiKey: string };
 
 export function ServerManagementScreen() {
   const { isDark } = useTheme();
-  const { login, checkAuth } = useAuth();
-  const [servers, setServers] = useState<SavedServer[]>([]);
-  const [name, setName] = useState('');
-  const [serverIP, setServerIP] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const loadServers = async () => {
-    const list = await storageService.getServers();
-    setServers(list as SavedServer[]);
-  };
-
-  useEffect(() => {
-    loadServers();
-  }, []);
-
-  const addServer = async () => {
-    if (!name.trim() || !serverIP.trim() || !apiKey.trim()) {
-      Alert.alert('Missing info', 'Please fill all fields.');
-      return;
-    }
-    setBusy(true);
-    try {
-      const list = await storageService.getServers();
-      const next = [...list, { id: generateId(), name: name.trim(), serverIP: serverIP.trim(), apiKey: apiKey.trim() }];
-      await storageService.saveServers(next);
-      setName('');
-      setServerIP('');
-      setApiKey('');
-      await loadServers();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const removeServer = async (id: string) => {
-    setBusy(true);
-    try {
-      const list = await storageService.getServers();
-      const next = list.filter((s: SavedServer) => s.id !== id);
-      await storageService.saveServers(next);
-      await loadServers();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const makeActive = async (server: SavedServer) => {
-    setBusy(true);
-    try {
-      // Save as current credentials; Apollo will rebuild through auth state
-      await login({ serverIP: server.serverIP, apiKey: server.apiKey });
-      await checkAuth();
-      Alert.alert('Active server updated', `Now using ${server.name}`);
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to switch server');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const {
+    servers,
+    name,
+    serverIP,
+    apiKey,
+    busy,
+    setName,
+    setServerIP,
+    setApiKey,
+    addServer,
+    removeServer,
+    makeActive,
+  } = useServerManagement();
 
   // iOS: Use SwiftUI-based UI for native feel
   if (Platform.OS === 'ios') {
