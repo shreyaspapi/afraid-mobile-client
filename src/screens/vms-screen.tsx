@@ -3,6 +3,7 @@ import { ErrorMessage } from '@/src/components/ui/error-message';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { GET_VMS, START_VM, STOP_VM } from '@/src/graphql/queries';
 import { usePollingInterval } from '@/src/hooks/usePollingInterval';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -60,6 +61,7 @@ interface VMItem {
 
 export function VMsScreen() {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const [isDemoMode, setIsDemoMode] = useState(false);
   const { pollingInterval } = usePollingInterval();
 
@@ -102,55 +104,55 @@ export function VMsScreen() {
   const pieData = useMemo(() => {
     if (totals.total === 0) {
       return [
-        { x: 'No Data', y: 1, color: isDark ? '#2c2c2e' : '#d1d1d6' },
+        { x: t('common.noData'), y: 1, color: isDark ? '#2c2c2e' : '#d1d1d6' },
       ];
     }
 
     const slices = [
-      { x: 'Running', y: totals.running, color: '#34c759' },
-      { x: 'Stopped', y: totals.stopped, color: '#ff3b30' },
+      { x: t('vms.running'), y: totals.running, color: '#34c759' },
+      { x: t('vms.stopped'), y: totals.stopped, color: '#ff3b30' },
     ].filter((slice) => slice.y > 0);
 
-    return slices.length > 0 ? slices : [{ x: 'Total', y: totals.total, color: '#007aff' }];
+    return slices.length > 0 ? slices : [{ x: t('vms.total'), y: totals.total, color: '#007aff' }];
   }, [isDark, totals]);
 
   if (loading && !data) {
-    return <LoadingScreen message="Loading virtual machines..." />;
+    return <LoadingScreen message={t('loadingMessages.vms')} />;
   }
 
   if (error && !data) {
-    return <ErrorMessage message={error.message || 'Failed to load VMs'} onRetry={() => refetch()} />;
+    return <ErrorMessage message={error.message || t('vms.errorLoadingVMs')} onRetry={() => refetch()} />;
   }
 
   const onStart = async (id: string) => {
     if (isDemoMode) {
-      Alert.alert('Demo Mode', 'VM start operation is disabled in demo mode');
+      Alert.alert(t('dashboard.demoMode'), t('vms.demoModeStart'));
       return;
     }
     try {
       await startVM({ variables: { id } });
       await refetch();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to start VM');
+      Alert.alert(t('common.error'), e.message || t('vms.errorStartingVM'));
     }
   };
 
   const onStop = async (id: string) => {
     if (isDemoMode) {
-      Alert.alert('Demo Mode', 'VM stop operation is disabled in demo mode');
+      Alert.alert(t('dashboard.demoMode'), t('vms.demoModeStop'));
       return;
     }
     try {
       await stopVM({ variables: { id } });
       await refetch();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to stop VM');
+      Alert.alert(t('common.error'), e.message || t('vms.errorStoppingVM'));
     }
   };
 
   const showActionsFor = (item: VMItem) => {
     const isRunning = item.state?.toLowerCase() === 'running';
-    const options = [isRunning ? 'Stop' : 'Start', 'Cancel'];
+    const options = [isRunning ? t('vms.stop') : t('vms.start'), t('common.cancel')];
     const destructiveButtonIndex = isRunning ? 0 : undefined;
     const cancelButtonIndex = 1;
     ActionSheetIOS.showActionSheetWithOptions(
@@ -188,7 +190,7 @@ export function VMsScreen() {
               onPress={() => (isRunning ? onStop(item.id) : onStart(item.id))}
             >
               <Text style={[styles.btnText, { color: isRunning ? '#ff3b30' : '#34c759' }]}>
-                {isRunning ? 'Stop' : 'Start'}
+                {isRunning ? t('vms.stop') : t('vms.start')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -256,7 +258,7 @@ export function VMsScreen() {
                     <UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
                       <UiText size={17} weight="semibold">Running</UiText>
                       <UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-                        {totals.running === 0 ? 'No VMs active' : 'Currently powered on'}
+                        {totals.running === 0 ? t('vms.noVMsActive') : t('vms.currentlyPoweredOn')}
                       </UiText>
                     </UiVStack>
                     <UiSpacer />
@@ -272,7 +274,7 @@ export function VMsScreen() {
                     <UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
                       <UiText size={17} weight="semibold">Stopped</UiText>
                       <UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-                        {totals.stopped === 0 ? 'No VMs stopped' : 'Currently powered off'}
+                        {totals.stopped === 0 ? t('vms.noVMsStopped') : t('vms.currentlyPoweredOff')}
                       </UiText>
                     </UiVStack>
                     <UiSpacer />
@@ -285,7 +287,7 @@ export function VMsScreen() {
             </UiSection>
 
             <UiSection title="Virtual Machines">
-              {vms.length === 0 ? <UiText size={15}>No VMs found</UiText> : null}
+              {vms.length === 0 ? <UiText size={15}>{t('vms.noVMs')}</UiText> : null}
               {vms.map((item) => {
                 const isRunning = item.state?.toLowerCase() === 'running';
                 return (
@@ -333,7 +335,7 @@ export function VMsScreen() {
           />
         }
         ListEmptyComponent={
-          <Text style={[styles.empty, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>No VMs found</Text>
+          <Text style={[styles.empty, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>{t('vms.noVMs')}</Text>
         }
       />
     </SafeAreaView>

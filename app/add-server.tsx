@@ -1,4 +1,5 @@
 import { useServerManagement } from '@/src/hooks/useServerManagement';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -7,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AddServerRoute() {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const router = useRouter();
   const {
     name,
@@ -24,7 +26,7 @@ export default function AddServerRoute() {
       await addServer();
       router.back();
     } catch (e: any) {
-      Alert.alert('Failed to add server', e?.message ?? 'Unknown error');
+      Alert.alert(t('errors.generic'), e?.message ?? t('errors.serverError'));
     }
   };
 
@@ -32,10 +34,10 @@ export default function AddServerRoute() {
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]} edges={['top']}>
       <View style={styles.content}>
         <View style={styles.card}>
-          <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>Add Server</Text>
+          <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>{t('servers.addServer')}</Text>
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>Name</Text>
+            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>{t('servers.name')}</Text>
             <TextInput
               style={[
                 styles.input,
@@ -45,7 +47,7 @@ export default function AddServerRoute() {
                   borderColor: isDark ? '#38383a' : '#c7c7cc',
                 },
               ]}
-              placeholder="My Unraid"
+              placeholder={t('servers.namePlaceholder')}
               placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
               value={name}
               onChangeText={setName}
@@ -54,7 +56,7 @@ export default function AddServerRoute() {
           </View>
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>Server URL</Text>
+            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>{t('servers.serverUrl')}</Text>
             <TextInput
               style={[
                 styles.input,
@@ -64,7 +66,7 @@ export default function AddServerRoute() {
                   borderColor: isDark ? '#38383a' : '#c7c7cc',
                 },
               ]}
-              placeholder="http://192.168.1.100:3001/graphql"
+              placeholder={t('servers.serverUrlPlaceholder')}
               placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
               value={serverIP}
               onChangeText={setServerIP}
@@ -74,7 +76,7 @@ export default function AddServerRoute() {
           </View>
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>API Key</Text>
+            <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>{t('servers.apiKey')}</Text>
             <TextInput
               style={[
                 styles.input,
@@ -84,7 +86,7 @@ export default function AddServerRoute() {
                   borderColor: isDark ? '#38383a' : '#c7c7cc',
                 },
               ]}
-              placeholder="API key"
+              placeholder={t('servers.apiKeyPlaceholder')}
               placeholderTextColor={isDark ? '#6e6e73' : '#8e8e93'}
               value={apiKey}
               onChangeText={setApiKey}
@@ -98,7 +100,7 @@ export default function AddServerRoute() {
             disabled={busy}
             onPress={handleAdd}
           >
-            <Text style={styles.primaryBtnText}>{busy ? 'Working…' : 'Add Server'}</Text>
+            <Text style={styles.primaryBtnText}>{busy ? t('common.loading') : t('servers.addServer')}</Text>
           </TouchableOpacity>
         </View>
       </View>

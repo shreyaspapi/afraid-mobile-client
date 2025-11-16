@@ -1,4 +1,5 @@
 import { SavedServer, useServerManagement } from '@/src/hooks/useServerManagement';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useLayoutEffect } from 'react';
@@ -9,11 +10,12 @@ export default function ServersRoute() {
   const router = useRouter();
   const navigation = useNavigation();
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const { servers, busy, makeActive, removeServer } = useServerManagement();
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: 'Servers',
+      headerTitle: t('servers.title'),
       // keep native back button on the left
       headerRight: () => (
         <TouchableOpacity onPress={() => router.push('/add-server')} style={{ paddingHorizontal: 12 }}>
@@ -38,14 +40,14 @@ export default function ServersRoute() {
             disabled={busy}
             onPress={() => makeActive(item)}
           >
-            <Text style={[styles.actionText, { color: '#007aff' }]}>Make Active</Text>
+            <Text style={[styles.actionText, { color: '#007aff' }]}>{t('servers.makeActive')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionBtn}
             disabled={busy}
             onPress={() => removeServer(item.id)}
           >
-            <Text style={[styles.actionText, { color: '#ff3b30' }]}>Remove</Text>
+            <Text style={[styles.actionText, { color: '#ff3b30' }]}>{t('servers.remove')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -62,7 +64,7 @@ export default function ServersRoute() {
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            No saved servers
+            {t('servers.noSavedServers')}
           </Text>
         }
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}

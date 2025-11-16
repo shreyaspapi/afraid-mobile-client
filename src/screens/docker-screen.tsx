@@ -3,6 +3,7 @@ import { ErrorMessage } from '@/src/components/ui/error-message';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { START_CONTAINER, STOP_CONTAINER } from '@/src/graphql/queries';
 import { useDockerContainers } from '@/src/hooks/useUnraidQuery';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useMutation } from '@apollo/client/react';
@@ -63,6 +64,7 @@ interface ContainerItem {
 
 export function DockerScreen() {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
@@ -121,17 +123,17 @@ export function DockerScreen() {
       raw.includes('docker') &&
       (raw.includes('socket') || raw.includes('enoent') || raw.includes('unavailable'))
     ) {
-      return 'Docker service is unavailable. Start the array and ensure Docker is enabled in Settings > Docker.';
+      return t('docker.errorDockerUnavailable');
     }
     // API key missing DOCKER read permission
     if (raw.includes('permission') || raw.includes('forbidden') || raw.includes('unauthorized')) {
-      return 'Access denied for Docker. Check that your API key has DOCKER read permissions.';
+      return t('docker.errorDockerPermission');
     }
-    return error.message || 'Failed to load containers';
+    return error.message || t('docker.errorLoadingContainers');
   }, [error]);
 
   if (loading && !data) {
-    return <LoadingScreen message="Loading containers..." />;
+    return <LoadingScreen message={t('loadingMessages.containers')} />;
   }
 
   if (error && !data) {
@@ -140,7 +142,7 @@ export function DockerScreen() {
 
   const onStart = async (id: string) => {
     if (isDemoMode) {
-      Alert.alert('Demo Mode', 'Container start operation is disabled in demo mode');
+      Alert.alert(t('dashboard.demoMode'), t('docker.demoModeStart'));
       return;
     }
     try {
@@ -153,7 +155,7 @@ export function DockerScreen() {
 
   const onStop = async (id: string) => {
     if (isDemoMode) {
-      Alert.alert('Demo Mode', 'Container stop operation is disabled in demo mode');
+      Alert.alert(t('dashboard.demoMode'), t('docker.demoModeStop'));
       return;
     }
     try {
@@ -166,7 +168,7 @@ export function DockerScreen() {
 
   const onRestart = async (id: string) => {
     if (isDemoMode) {
-      Alert.alert('Demo Mode', 'Container restart operation is disabled in demo mode');
+      Alert.alert(t('dashboard.demoMode'), t('docker.demoModeRestart'));
       return;
     }
     try {
@@ -181,7 +183,7 @@ export function DockerScreen() {
 
   const showActionsFor = (item: ContainerItem) => {
     const isRunning = item.state?.toLowerCase() === 'running';
-    const options = [isRunning ? 'Stop' : 'Start', 'Restart', 'Cancel'];
+    const options = [isRunning ? t('docker.stop') : t('docker.start'), t('docker.restart'), t('common.cancel')];
     const destructiveButtonIndex = isRunning ? 0 : undefined;
     const cancelButtonIndex = 2;
     ActionSheetIOS.showActionSheetWithOptions(
@@ -232,7 +234,7 @@ export function DockerScreen() {
               onPress={() => (isRunning ? onStop(item.id) : onStart(item.id))}
             >
               <Text style={[styles.btnText, { color: isRunning ? '#ff3b30' : '#34c759' }]}>
-                {isRunning ? 'Stop' : 'Start'}
+                {isRunning ? t('docker.stop') : t('docker.start')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -291,7 +293,7 @@ export function DockerScreen() {
 										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
 											<UiText size={17} weight="semibold">Total</UiText>
 											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-												{totals.total === 0 ? 'No containers detected' : 'Combined containers'}
+												{totals.total === 0 ? t('docker.noContainersDetected') : t('docker.combinedContainers')}
 											</UiText>
 										</UiVStack>
 										<UiSpacer />
@@ -307,7 +309,7 @@ export function DockerScreen() {
 										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
 											<UiText size={17} weight="semibold">Running</UiText>
 											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-												{totals.running === 0 ? 'No containers active' : 'Currently active'}
+												{totals.running === 0 ? t('docker.noContainersActive') : t('docker.currentlyActive')}
 											</UiText>
 										</UiVStack>
 										<UiSpacer />
@@ -323,7 +325,7 @@ export function DockerScreen() {
 										<UiVStack alignment="leading" spacing={4} modifiers={[layoutPriority(1)]}>
 											<UiText size={17} weight="semibold">Stopped</UiText>
 											<UiText size={15} color={isDark ? '#8e8e93' : '#6e6e73'}>
-												{totals.stopped === 0 ? 'No containers stopped' : 'Currently inactive'}
+												{totals.stopped === 0 ? t('docker.noContainersStopped') : t('docker.currentlyInactive')}
 											</UiText>
 										</UiVStack>
 										<UiSpacer />
@@ -336,7 +338,7 @@ export function DockerScreen() {
 						</UiSection>
 
 						<UiSection title="Containers">
-							{filteredContainers.length === 0 ? <UiText size={15}>No containers found</UiText> : null}
+							{filteredContainers.length === 0 ? <UiText size={15}>{t('docker.noContainers')}</UiText> : null}
 							{filteredContainers.map((item) => {
 								const isRunning = item.state?.toLowerCase() === 'running';
 								const name = (item.names && item.names[0]) || item.id;
@@ -386,7 +388,7 @@ export function DockerScreen() {
           />
         }
         ListEmptyComponent={
-          <Text style={[styles.empty, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>No containers found</Text>
+          <Text style={[styles.empty, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>{t('docker.noContainers')}</Text>
         }
       />
     </SafeAreaView>

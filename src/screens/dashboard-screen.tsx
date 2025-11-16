@@ -13,6 +13,7 @@ import { ProgressBar } from '@/src/components/ui/progress-bar';
 import { START_ARRAY, STOP_ARRAY } from '@/src/graphql/queries';
 import { useMetricsHistory } from '@/src/hooks/useMetricsHistory';
 import { useDashboardData } from '@/src/hooks/useUnraidQuery';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { calculatePercentage, formatBytes, formatUptime } from '@/src/utils/formatters';
@@ -24,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function DashboardScreen() {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
@@ -82,13 +84,13 @@ export function DashboardScreen() {
   );
 
   if (loading && !data) {
-    return <LoadingScreen message="Loading system information..." />;
+    return <LoadingScreen message={t('loadingMessages.systemInfo')} />;
   }
 
   if (error && !data) {
     return (
       <ErrorMessage
-        message={error.message || 'Failed to load system information'}
+        message={error.message || t('dashboard.errorLoadingSystem')}
         onRetry={() => refetch()}
       />
     );
@@ -149,10 +151,10 @@ export function DashboardScreen() {
       {isDemoMode && (
         <View style={[styles.demoBanner, { backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5', borderColor: '#34c759' }]}>
           <Text style={[styles.demoBannerText, { color: isDark ? '#ffffff' : '#000000' }]}>
-            Demo Mode
+            {t('dashboard.demoMode')}
           </Text>
           <Text style={[styles.demoBannerSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            All data is simulated. Operations are disabled.
+            {t('dashboard.demoModeSubtext')}
           </Text>
         </View>
       )}
@@ -170,7 +172,7 @@ export function DashboardScreen() {
           </View>
           {systemInfo.os.uptime !== undefined && (
             <Text style={[styles.uptimeText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              Uptime: {formatUptime(systemInfo.os.uptime)} • {systemInfo.os.distro || 'Unraid'} {vars?.version || ''}
+              {t('dashboard.uptime')}: {formatUptime(systemInfo.os.uptime)} • {systemInfo.os.distro || 'Unraid'} {vars?.version || ''}
             </Text>
           )}
         </View>
@@ -180,14 +182,14 @@ export function DashboardScreen() {
       {metrics && (
         <View style={styles.metricsRow}>
           <MetricCard
-            label="RAM"
+            label={t('dashboard.ram')}
             value={memoryPercentage.toFixed(0)}
             unit="%"
             subtitle={memoryInfo ? formatBytes(Number(memoryInfo.used)) : ''}
             status={memoryPercentage > 90 ? 'critical' : memoryPercentage > 75 ? 'warning' : 'good'}
           />
           <MetricCard
-            label="CPU"
+            label={t('dashboard.cpu')}
             value={cpuUsage.toFixed(0)}
             unit="%"
             subtitle={`${systemInfo?.cpu.cores || 0} cores`}
@@ -208,7 +210,7 @@ export function DashboardScreen() {
         <Card>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Performance Trends
+              {t('dashboard.performanceTrends')}
             </Text>
           </View>
           
@@ -218,7 +220,7 @@ export function DashboardScreen() {
                 data={cpuChartData}
                 width={Dimensions.get('window').width - 64}
                 height={140}
-                label="CPU Usage"
+                label={t('dashboard.cpuUsage')}
                 color="#007aff"
                 maxValue={100}
                 minValue={0}
@@ -251,29 +253,29 @@ export function DashboardScreen() {
         <Card>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              System Overview
+              {t('dashboard.systemOverview')}
             </Text>
           </View>
           
           <View style={styles.circularProgressRow}>
             <CircularProgress
               percentage={memoryPercentage}
-              label="RAM usage"
+              label={t('dashboard.ramUsage')}
               size={75}
             />
             <CircularProgress
               percentage={flashPercentage}
-              label="Flash"
+              label={t('dashboard.flash')}
               size={75}
             />
             <CircularProgress
               percentage={diskPercentage}
-              label="Storage"
+              label={t('dashboard.storage')}
               size={75}
             />
             <CircularProgress
               percentage={cpuUsage}
-              label="CPU"
+              label={t('dashboard.cpu')}
               size={75}
             />
           </View>
@@ -284,7 +286,7 @@ export function DashboardScreen() {
             {memoryInfo && (
               <View style={styles.statColumn}>
                 <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  Total RAM
+                  {t('dashboard.totalRam')}
                 </Text>
                 <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                   {formatBytes(Number(memoryInfo.total))}
@@ -294,7 +296,7 @@ export function DashboardScreen() {
             {arrayInfo && (
               <View style={styles.statColumn}>
                 <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  Array Status
+                  {t('dashboard.arrayStatus')}
                 </Text>
                 <Text style={[
                   styles.statValue,
@@ -317,7 +319,7 @@ export function DashboardScreen() {
           >
             <View>
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                Array Control
+                {t('dashboard.arrayControl')}
               </Text>
               <Text style={[
                 styles.compactSubtext, 
@@ -327,7 +329,7 @@ export function DashboardScreen() {
                     : (isDark ? '#8e8e93' : '#6e6e73')
                 }
               ]}>
-                Status: {arrayInfo.state}
+                {t('dashboard.status')}: {arrayInfo.state}
               </Text>
             </View>
             <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
@@ -352,8 +354,8 @@ export function DashboardScreen() {
                 disabled={startingArray || stoppingArray}
                 onPress={async () => {
                   Alert.alert(
-                    'Stop Array',
-                    'Stop will take the array off-line.',
+                    t('dashboard.stopArrayTitle'),
+                    t('dashboard.stopArrayMessage'),
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {
@@ -361,7 +363,7 @@ export function DashboardScreen() {
                         style: 'destructive',
                         onPress: async () => {
                           if (isDemoMode) {
-                            Alert.alert('Demo Mode', 'Array operations are disabled in demo mode');
+                            Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
                             return;
                           }
                           await stopArray();
@@ -373,7 +375,7 @@ export function DashboardScreen() {
                 }}
               >
                 <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
-                  STOP
+                  {t('dashboard.stop')}
                 </Text>
               </TouchableOpacity>
               <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
@@ -394,7 +396,7 @@ export function DashboardScreen() {
                 disabled={startingArray || stoppingArray}
                 onPress={async () => {
                   if (isDemoMode) {
-                    Alert.alert('Demo Mode', 'Array operations are disabled in demo mode');
+                    Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
                     return;
                   }
                   try {
@@ -406,7 +408,7 @@ export function DashboardScreen() {
                 }}
               >
                 <Text style={[styles.operationButtonText, { color: '#34c759' }]}>
-                  START
+                  {t('dashboard.start')}
                 </Text>
               </TouchableOpacity>
               <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
@@ -432,14 +434,14 @@ export function DashboardScreen() {
                 disabled={arrayInfo.state?.toLowerCase() !== 'started'}
                 onPress={() => {
                   Alert.alert(
-                    'Spin Up',
-                    'Spin up all disks immediately?',
+                    t('dashboard.spinUpTitle'),
+                    t('dashboard.spinUpMessage'),
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {
                         text: 'Spin Up',
                         onPress: () => {
-                          Alert.alert('Info', 'Spin up functionality coming soon');
+                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
                         }
                       }
                     ]
@@ -450,7 +452,7 @@ export function DashboardScreen() {
                   styles.operationButtonText,
                   { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
                 ]}>
-                  SPIN UP
+                  {t('dashboard.spinUp')}
                 </Text>
               </TouchableOpacity>
 
@@ -466,14 +468,14 @@ export function DashboardScreen() {
                 disabled={arrayInfo.state?.toLowerCase() !== 'started'}
                 onPress={() => {
                   Alert.alert(
-                    'Spin Down',
-                    'Spin down all disks immediately?',
+                    t('dashboard.spinDownTitle'),
+                    t('dashboard.spinDownMessage'),
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {
                         text: 'Spin Down',
                         onPress: () => {
-                          Alert.alert('Info', 'Spin down functionality coming soon');
+                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
                         }
                       }
                     ]
@@ -484,7 +486,7 @@ export function DashboardScreen() {
                   styles.operationButtonText,
                   { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
                 ]}>
-                  SPIN DOWN
+                  {t('dashboard.spinDown')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -514,15 +516,15 @@ export function DashboardScreen() {
                 ]}
                 onPress={() => {
                   Alert.alert(
-                    'Reboot',
-                    'Reboot will activate a clean system reset.',
+                    t('dashboard.rebootTitle'),
+                    t('dashboard.rebootMessage'),
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {
                         text: 'Reboot',
                         style: 'destructive',
                         onPress: () => {
-                          Alert.alert('Info', 'Reboot functionality coming soon');
+                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
                         }
                       }
                     ]
@@ -530,7 +532,7 @@ export function DashboardScreen() {
                 }}
               >
                 <Text style={[styles.operationButtonText, { color: '#ff9500' }]}>
-                  REBOOT
+                  {t('dashboard.reboot')}
                 </Text>
               </TouchableOpacity>
 
@@ -545,15 +547,15 @@ export function DashboardScreen() {
                 ]}
                 onPress={() => {
                   Alert.alert(
-                    'Shutdown',
-                    'Shutdown will activate a clean system power down.',
+                    t('dashboard.shutdownTitle'),
+                    t('dashboard.shutdownMessage'),
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {
                         text: 'Shutdown',
                         style: 'destructive',
                         onPress: () => {
-                          Alert.alert('Info', 'Shutdown functionality coming soon');
+                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
                         }
                       }
                     ]
@@ -561,7 +563,7 @@ export function DashboardScreen() {
                 }}
               >
                 <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
-                  SHUTDOWN
+                  {t('dashboard.shutdown')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -584,14 +586,14 @@ export function DashboardScreen() {
         <Card>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Boot Device
+              {t('dashboard.bootDevice')}
             </Text>
           </View>
           
           <View style={styles.bootDeviceContainer}>
             <View style={styles.bootDeviceRow}>
               <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Device
+                {t('dashboard.device')}
               </Text>
               <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                 Flash ({flashDisk.device || flashDisk.name})
@@ -600,7 +602,7 @@ export function DashboardScreen() {
             
             <View style={styles.bootDeviceRow}>
               <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Filesystem
+                {t('dashboard.filesystem')}
               </Text>
               <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                 {flashDisk.fsType || 'vfat'}
@@ -609,7 +611,7 @@ export function DashboardScreen() {
             
             <View style={styles.bootDeviceRow}>
               <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Size
+                {t('dashboard.size')}
               </Text>
               <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                 {formatBytes(Number(flashDisk.fsSize || flashDisk.size || 0))}
@@ -618,7 +620,7 @@ export function DashboardScreen() {
             
             <View style={styles.bootDeviceRow}>
               <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Used
+                {t('dashboard.used')}
               </Text>
               <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                 {formatBytes(Number(flashDisk.fsUsed || 0))}
@@ -627,7 +629,7 @@ export function DashboardScreen() {
             
             <View style={styles.bootDeviceRow}>
               <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Free
+                {t('dashboard.free')}
               </Text>
               <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
                 {formatBytes(Number(flashDisk.fsFree || 0))}
@@ -653,7 +655,7 @@ export function DashboardScreen() {
         <Card>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Motherboard
+              {t('dashboard.motherboard')}
             </Text>
           </View>
           <Text style={[styles.compactValue, { color: isDark ? '#ffffff' : '#000000' }]}>
@@ -676,7 +678,7 @@ export function DashboardScreen() {
           >
             <View>
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                Processor
+                {t('dashboard.processor')}
               </Text>
               <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
                 {systemInfo.cpu.brand}
@@ -689,7 +691,7 @@ export function DashboardScreen() {
           
           <View style={styles.processorSummary}>
             <Text style={[styles.loadText, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Load: <Text style={{ color: '#34c759' }}>{cpuUsage.toFixed(1)}%</Text>
+              {t('dashboard.load')}: <Text style={{ color: '#34c759' }}>{cpuUsage.toFixed(1)}%</Text>
             </Text>
           </View>
 
@@ -731,7 +733,7 @@ export function DashboardScreen() {
             onPress={() => toggleSection('network')}
           >
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Network Interfaces ({systemInfo.devices.network.length})
+              {t('dashboard.networkInterfaces')} ({systemInfo.devices.network.length})
             </Text>
             <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
               {expandedSections.network ? '−' : '+'}
@@ -772,7 +774,7 @@ export function DashboardScreen() {
             onPress={() => toggleSection('shares')}
           >
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Shares ({shares.length})
+              {t('dashboard.shares')} ({shares.length})
             </Text>
             <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
               {expandedSections.shares ? '−' : '+'}
@@ -822,10 +824,10 @@ export function DashboardScreen() {
           >
             <View>
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                Array Disks ({arrayInfo.disks.length})
+                {t('dashboard.arrayDisks')} ({arrayInfo.disks.length})
               </Text>
               <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {formatBytes(Number(arrayInfo.capacity.disks.used))} of {formatBytes(Number(arrayInfo.capacity.disks.total))} used
+                {formatBytes(Number(arrayInfo.capacity.disks.used))} {t('dashboard.of')} {formatBytes(Number(arrayInfo.capacity.disks.total))} {t('dashboard.used')}
               </Text>
             </View>
             <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
@@ -881,7 +883,7 @@ export function DashboardScreen() {
         <Card>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Unassigned Devices
+              {t('dashboard.unassignedDevices')}
             </Text>
           </View>
           <View style={styles.unassignedContainer}>

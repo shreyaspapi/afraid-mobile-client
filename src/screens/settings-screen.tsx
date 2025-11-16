@@ -75,49 +75,48 @@ export function SettingsScreen() {
   const { pollingInterval, updatePollingInterval } = usePollingInterval();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLanguageAlert, setShowLanguageAlert] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [showLogoutErrorAlert, setShowLogoutErrorAlert] = useState(false);
+  const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
   const insets = useSafeAreaInsets();
   const bottomTabPadding = useAdaptiveBottomTabPadding();
   const router = useRouter();
 
+  const performLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await apolloClient.clearStore();
+      console.log('Apollo cache cleared');
+      await logout();
+      console.log('Logout successful');
+      await checkAuth();
+      console.log('Auth state re-checked');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      if (Platform.OS === 'web') {
+        setLogoutErrorMessage(error?.message || t('settings.logoutError'));
+        setShowLogoutErrorAlert(true);
+      } else {
+        Alert.alert(t('common.error'), `${t('settings.logoutError')}: ${error?.message || t('errors.generic')}`);
+      }
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoggingOut(true);
-            try {
-              // Clear Apollo cache first
-              await apolloClient.clearStore();
-              console.log('Apollo cache cleared');
-              
-              // Logout (clears credentials and sets isAuthenticated to false)
-              await logout();
-              console.log('Logout successful');
-              
-              // Force re-check auth state
-              await checkAuth();
-              console.log('Auth state re-checked');
-            } catch (error: any) {
-              console.error('Logout error:', error);
-              Alert.alert(
-                'Error', 
-                `Failed to logout: ${error?.message || 'Unknown error'}`
-              );
-            } finally {
-              setIsLoggingOut(false);
-            }
-          },
-        },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      setShowLogoutAlert(true);
+      return;
+    }
+    Alert.alert(t('settings.logout'), t('settings.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.logout'),
+        style: 'destructive',
+        onPress: performLogout,
+      },
+    ]);
   };
 
   const handleDarkModeToggle = async (value: boolean) => {
@@ -133,21 +132,21 @@ export function SettingsScreen() {
     const currentIndex = options.findIndex(opt => opt.value === (pollingInterval || AppConfig.graphql.defaultPollInterval));
     
     Alert.alert(
-      'Polling Frequency',
-      'How often should the app refresh data automatically?',
+      t('settings.pollingFrequency') || 'Polling Frequency',
+      t('settings.pollingDescription') || 'How often should the app refresh data automatically?',
       [
         ...options.map((option) => ({
           text: option.label,
           onPress: async () => {
             try {
               await updatePollingInterval(option.value);
-              Alert.alert('Success', `Polling frequency updated to ${option.label.toLowerCase()}`);
+              Alert.alert(t('common.ok'), `${t('settings.pollingUpdated')} ${option.label.toLowerCase()}`);
             } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to update polling frequency');
+              Alert.alert(t('common.error'), error.message || t('settings.updateError'));
             }
           },
         })),
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
       ]
     );
   };
@@ -167,9 +166,9 @@ export function SettingsScreen() {
         onPress: async () => {
           try {
             await setLocale(code as any);
-            Alert.alert('Success', `Language changed to ${name}`);
+            Alert.alert(t('common.ok'), `${t('settings.languageChanged')} ${name}`);
           } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to change language');
+            Alert.alert(t('common.error'), error.message || t('errors.generic'));
           }
         },
       }));
@@ -265,25 +264,25 @@ export function SettingsScreen() {
               </UiHStack>
               <UiHStack spacing={8}>
                 <UiImage systemName="paintbrush.fill" />
-                <UiText size={17}>Current Theme</UiText>
+                <UiText size={17}>{t('settings.currentTheme')}</UiText>
                 <UiSpacer />
-                <UiText size={17}>{isDark ? 'Dark' : 'Light'}</UiText>
+                <UiText size={17}>{isDark ? t('settings.dark') : t('settings.light')}</UiText>
               </UiHStack>
             </UiSection>
 
-            <UiSection title="Actions">
+            <UiSection title={t('settings.actions') || 'Actions'}>
               <UiButton
                 onPress={() => {
                   Alert.alert(
-                    'Clear Cache',
-                    'This will clear all cached data and refresh from the server.',
+                    t('settings.clearCache') || 'Clear Cache',
+                    t('settings.clearCacheDescription') || 'This will clear all cached data and refresh from the server.',
                     [
-                      { text: 'Cancel', style: 'cancel' },
+                      { text: t('common.cancel'), style: 'cancel' },
                       {
-                        text: 'Clear',
+                        text: t('common.delete'),
                         onPress: async () => {
                           await apolloClient.clearStore();
-                          Alert.alert('Success', 'Cache cleared successfully');
+                          Alert.alert(t('common.ok'), t('settings.cacheCleared'));
                         },
                       },
                     ]
@@ -327,23 +326,23 @@ export function SettingsScreen() {
         keyboardShouldPersistTaps="handled"
     >
       <Text style={[styles.title, { color: isDark ? '#ffffff' : '#000000' }]}>
-        Settings
+        {t('settings.settingsTitle')}
       </Text>
 
       {/* Appearance */}
       <Card>
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-          Appearance
+          {t('settings.appearance')}
         </Text>
         
         {/* Auto Mode */}
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Automatic
+              {t('settings.automatic')}
             </Text>
             <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              Follow system theme settings
+              {t('settings.followSystemTheme')}
             </Text>
           </View>
           <Switch
@@ -363,10 +362,10 @@ export function SettingsScreen() {
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  Dark Mode
+                  {t('settings.darkMode')}
                 </Text>
                 <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  Use dark theme
+                  {t('settings.useDarkTheme')}
                 </Text>
               </View>
               <Switch
@@ -408,28 +407,28 @@ export function SettingsScreen() {
       {/* Server Information */}
       <Card>
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-          Server Information
+          {t('settings.serverInformation')}
         </Text>
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Server IP
+            {t('settings.serverIP')}
           </Text>
           <Text
             style={[styles.value, { color: isDark ? '#ffffff' : '#000000' }]}
             numberOfLines={1}
           >
-            {credentials?.serverIP || 'Not connected'}
+            {credentials?.serverIP || t('settings.notConnected')}
           </Text>
         </View>
         <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#e5e5e5' }]} />
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Connection Status
+            {t('settings.connectionStatus')}
           </Text>
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: '#34c759' }]} />
             <Text style={[styles.value, { color: '#34c759' }]}>
-              Connected
+              {t('settings.connected')}
             </Text>
           </View>
         </View>
@@ -440,10 +439,10 @@ export function SettingsScreen() {
           <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/servers')} activeOpacity={0.7}>
             <View style={styles.settingInfo}>
               <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
-                Servers
+                {t('servers.title')}
               </Text>
               <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Manage saved servers
+                {t('settings.manageSavedServers')}
               </Text>
             </View>
             <Text style={[styles.value, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>›</Text>
@@ -453,11 +452,11 @@ export function SettingsScreen() {
       {/* App Information */}
       <Card>
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-          App Information
+          {t('settings.appInformation')}
         </Text>
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Version
+            {t('settings.version')}
           </Text>
           <Text style={[styles.value, { color: isDark ? '#ffffff' : '#000000' }]}>
             1.0.0
@@ -466,10 +465,10 @@ export function SettingsScreen() {
         <View style={[styles.divider, { backgroundColor: isDark ? '#38383a' : '#e5e5e5' }]} />
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Current Theme
+            {t('settings.currentTheme')}
           </Text>
           <Text style={[styles.value, { color: isDark ? '#ffffff' : '#000000' }]}>
-            {isDark ? 'Dark' : 'Light'}
+            {isDark ? t('settings.dark') : t('settings.light')}
           </Text>
         </View>
       </Card>
@@ -477,7 +476,7 @@ export function SettingsScreen() {
       {/* Refresh Settings */}
       <Card>
         <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-          Data Refresh
+          {t('settings.dataRefresh')}
         </Text>
         
         {/* Polling Frequency */}
@@ -488,10 +487,10 @@ export function SettingsScreen() {
         >
           <View style={styles.settingInfo}>
             <Text style={[styles.settingLabel, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Polling Frequency
+              {t('settings.pollingFrequency')}
             </Text>
             <Text style={[styles.settingDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              How often to refresh data automatically
+              {t('settings.howOftenRefreshData')}
             </Text>
           </View>
           <Text style={[styles.value, { color: isDark ? '#007aff' : '#007aff' }]}>
@@ -503,10 +502,10 @@ export function SettingsScreen() {
         
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            Manual Refresh
+            {t('settings.manualRefresh')}
           </Text>
           <Text style={[styles.value, { color: isDark ? '#ffffff' : '#000000' }]}>
-            Pull to refresh
+            {t('settings.pullToRefresh')}
           </Text>
         </View>
       </Card>
@@ -533,7 +532,7 @@ export function SettingsScreen() {
           }}
         >
           <Text style={[styles.actionButtonText, { color: isDark ? '#ffffff' : '#007aff' }]}>
-            Clear Cache
+            {t('settings.clearCache')}
           </Text>
         </TouchableOpacity>
         
@@ -545,7 +544,7 @@ export function SettingsScreen() {
           disabled={isLoggingOut}
         >
           <Text style={[styles.actionButtonText, { color: '#ff3b30' }]}>
-            {isLoggingOut ? 'Logging out...' : 'Logout'}
+            {isLoggingOut ? t('settings.loggingOut') : t('settings.logout')}
           </Text>
         </TouchableOpacity>
       </Card>
@@ -553,13 +552,45 @@ export function SettingsScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: isDark ? '#48484a' : '#8e8e93' }]}>
-          Unraid Mobile App
+          {t('settings.unraidMobileApp')}
         </Text>
         <Text style={[styles.footerText, { color: isDark ? '#48484a' : '#8e8e93' }]}>
-          Built with React Native & Expo
+          {t('settings.builtWith')}
         </Text>
       </View>
     </ScrollView>
+
+    {Platform.OS === 'web' && (
+      <AlertDialog
+        visible={showLogoutAlert}
+        title={t('settings.logout')}
+        message={t('settings.logoutConfirm')}
+        buttons={[
+          { text: t('common.cancel') || 'Cancel', style: 'cancel', onPress: () => setShowLogoutAlert(false) },
+          {
+            text: t('settings.logout'),
+            style: 'destructive',
+            onPress: async () => {
+              setShowLogoutAlert(false);
+              await performLogout();
+            },
+          },
+        ]}
+        onDismiss={() => setShowLogoutAlert(false)}
+      />
+    )}
+
+    {Platform.OS === 'web' && (
+      <AlertDialog
+        visible={showLogoutErrorAlert}
+        title={t('common.error') || 'Error'}
+        message={logoutErrorMessage}
+        buttons={[
+          { text: t('common.ok') || 'OK', style: 'default', onPress: () => setShowLogoutErrorAlert(false) },
+        ]}
+        onDismiss={() => setShowLogoutErrorAlert(false)}
+      />
+    )}
 
     {Platform.OS === 'web' && (
       <AlertDialog

@@ -3,6 +3,7 @@ import { ErrorMessage } from '@/src/components/ui/error-message';
 import { LoadingScreen } from '@/src/components/ui/loading-screen';
 import { GET_NOTIFICATIONS } from '@/src/graphql/queries';
 import { usePollingInterval } from '@/src/hooks/usePollingInterval';
+import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useQuery } from '@apollo/client/react';
@@ -61,20 +62,9 @@ const IMPORTANCE_COLORS: Record<NotificationImportanceValue, string> = {
   INFO: '#32ade6',
 };
 
-const TYPE_LABELS: Record<NotificationTypeValue, string> = {
-  UNREAD: 'Unread',
-  ARCHIVE: 'Archived',
-};
-
-const IMPORTANCE_LABELS: Record<ImportanceFilter, string> = {
-  ALL: 'All',
-  ALERT: 'Alerts',
-  WARNING: 'Warnings',
-  INFO: 'Info',
-};
-
 export function NotificationsScreen() {
   const { isDark } = useTheme();
+  const { t } = useLocalization();
   const { pollingInterval } = usePollingInterval();
 
   const [selectedType, setSelectedType] = useState<NotificationTypeValue>('UNREAD');
@@ -157,7 +147,7 @@ export function NotificationsScreen() {
   if (error && !data) {
     return (
       <ErrorMessage
-        message={error.message || 'Failed to load notifications'}
+        message={error.message || t('notifications.errorLoadingNotifications')}
         onRetry={handleRefresh}
       />
     );
@@ -199,7 +189,7 @@ export function NotificationsScreen() {
     const importanceColor = IMPORTANCE_COLORS[item.importance];
     const timestamp =
       item.formattedTimestamp ??
-      (item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Unknown time');
+      (item.timestamp ? new Date(item.timestamp).toLocaleString() : t('notifications.unknownTime'));
 
     return (
       <Card>
@@ -263,7 +253,7 @@ export function NotificationsScreen() {
           </Text>
           {item.link ? (
             <TouchableOpacity onPress={() => handleOpenLink(item.link)}>
-              <Text style={styles.linkText}>Open</Text>
+              <Text style={styles.linkText}>{t('notifications.open')}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -279,7 +269,7 @@ export function NotificationsScreen() {
           { color: isDark ? '#8e8e93' : '#6e6e73' },
         ]}
       >
-        {TYPE_LABELS[selectedType]} summary
+        {selectedType === 'UNREAD' ? t('notifications.unread') : t('notifications.archived')} {t('notifications.summary')}
       </Text>
       <View style={styles.summaryRow}>
         <Text
@@ -296,7 +286,7 @@ export function NotificationsScreen() {
             { color: isDark ? '#8e8e93' : '#6e6e73' },
           ]}
         >
-          total notifications
+          {t('notifications.totalNotifications')}
         </Text>
       </View>
       <View style={styles.summaryBreakdown}>
@@ -318,7 +308,7 @@ export function NotificationsScreen() {
               { color: isDark ? '#8e8e93' : '#6e6e73' },
             ]}
           >
-            Info
+            {t('notifications.info')}
           </Text>
           <Text
             style={[
@@ -350,7 +340,7 @@ export function NotificationsScreen() {
               { color: isDark ? '#8e8e93' : '#6e6e73' },
             ]}
           >
-            Warnings
+            {t('notifications.warnings')}
           </Text>
           <Text
             style={[
@@ -379,7 +369,7 @@ export function NotificationsScreen() {
               { color: isDark ? '#8e8e93' : '#6e6e73' },
             ]}
           >
-            Alerts
+            {t('notifications.alerts')}
           </Text>
           <Text
             style={[
@@ -399,39 +389,34 @@ export function NotificationsScreen() {
       <View style={styles.chipRow}>
         {renderChip(
           'type-unread',
-          TYPE_LABELS.UNREAD,
+          t('notifications.unread'),
           TYPE_COLORS.UNREAD,
           selectedType === 'UNREAD',
           () => setSelectedType('UNREAD')
         )}
         {renderChip(
           'type-archive',
-          TYPE_LABELS.ARCHIVE,
+          t('notifications.archived'),
           TYPE_COLORS.ARCHIVE,
           selectedType === 'ARCHIVE',
           () => setSelectedType('ARCHIVE')
         )}
       </View>
       <View style={styles.chipRow}>
-        {(Object.keys(IMPORTANCE_LABELS) as ImportanceFilter[]).map((key) => {
-          if (key === 'ALL') {
-            return renderChip(
-              `importance-${key.toLowerCase()}`,
-              IMPORTANCE_LABELS.ALL,
-              '#007aff',
-              importanceFilter === 'ALL',
-              () => setImportanceFilter('ALL')
-            );
-          }
-          const castKey = key as NotificationImportanceValue;
-          return renderChip(
+        {[
+          { key: 'ALL' as ImportanceFilter, label: t('notifications.all'), color: '#007aff' },
+          { key: 'ALERT' as ImportanceFilter, label: t('notifications.alerts'), color: IMPORTANCE_COLORS.ALERT },
+          { key: 'WARNING' as ImportanceFilter, label: t('notifications.warnings'), color: IMPORTANCE_COLORS.WARNING },
+          { key: 'INFO' as ImportanceFilter, label: t('notifications.info'), color: IMPORTANCE_COLORS.INFO },
+        ].map(({ key, label, color }) => (
+          renderChip(
             `importance-${key.toLowerCase()}`,
-            IMPORTANCE_LABELS[castKey],
-            IMPORTANCE_COLORS[castKey],
-            importanceFilter === castKey,
-            () => setImportanceFilter(castKey)
-          );
-        })}
+            label,
+            color,
+            importanceFilter === key,
+            () => setImportanceFilter(key)
+          )
+        ))}
       </View>
     </>
   );
@@ -468,7 +453,7 @@ export function NotificationsScreen() {
                 { color: isDark ? '#ffffff' : '#000000' },
               ]}
             >
-              Notifications
+              {t('notifications.title')}
             </Text>
             <Text
               style={[
@@ -476,7 +461,7 @@ export function NotificationsScreen() {
                 { color: isDark ? '#8e8e93' : '#6e6e73' },
               ]}
             >
-              Stay on top of system events and alerts
+              {t('notifications.subtitle')}
             </Text>
             <View style={{ height: 12 }} />
             {summaryCard}
@@ -490,7 +475,7 @@ export function NotificationsScreen() {
               { color: isDark ? '#8e8e93' : '#6e6e73' },
             ]}
           >
-            No notifications match the selected filters.
+            {t('notifications.noNotificationsFiltered')}
           </Text>
         }
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
