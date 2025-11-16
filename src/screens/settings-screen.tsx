@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -74,7 +75,7 @@ export function SettingsScreen() {
   const apolloClient = useApolloClient();
   const { pollingInterval, updatePollingInterval } = usePollingInterval();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showLanguageAlert, setShowLanguageAlert] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showLogoutErrorAlert, setShowLogoutErrorAlert] = useState(false);
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
@@ -158,26 +159,16 @@ export function SettingsScreen() {
   };
 
   const handleLanguageChange = () => {
-    if (Platform.OS === 'web') {
-      setShowLanguageAlert(true);
-    } else {
-      const languageOptions = Object.entries(availableLocales).map(([code, name]) => ({
-        text: name,
-        onPress: async () => {
-          try {
-            await setLocale(code as any);
-            Alert.alert(t('common.ok'), `${t('settings.languageChanged')} ${name}`);
-          } catch (error: any) {
-            Alert.alert(t('common.error'), error.message || t('errors.generic'));
-          }
-        },
-      }));
+    setShowLanguageModal(true);
+  };
 
-      Alert.alert(
-        t('settings.language') || 'Language',
-        t('settings.selectLanguage') || 'Select your preferred language',
-        [...languageOptions, { text: t('common.cancel') || 'Cancel', style: 'cancel' }]
-      );
+  const handleLanguageSelect = async (code: string, name: string) => {
+    try {
+      await setLocale(code as any);
+      setShowLanguageModal(false);
+      Alert.alert(t('common.ok'), `${t('settings.languageChanged')} ${name}`);
+    } catch (error: any) {
+      Alert.alert(t('common.error'), error.message || t('errors.generic'));
     }
   };
 
@@ -592,30 +583,61 @@ export function SettingsScreen() {
       />
     )}
 
-    {Platform.OS === 'web' && (
-      <AlertDialog
-        visible={showLanguageAlert}
-        title={t('settings.language') || 'Language'}
-        message={t('settings.selectLanguage') || 'Select your preferred language'}
-        buttons={[
-          ...Object.entries(availableLocales).map(([code, name]) => ({
-            text: name,
-            style: code === locale ? 'default' : 'default' as const,
-            onPress: async () => {
-              try {
-                await setLocale(code as any);
-                setShowLanguageAlert(false);
-              } catch (error: any) {
-                console.error('Failed to change language:', error);
-                setShowLanguageAlert(false);
-              }
-            }
-          })),
-          { text: t('common.cancel') || 'Cancel', style: 'cancel' as const, onPress: () => setShowLanguageAlert(false) }
-        ]}
-        onDismiss={() => setShowLanguageAlert(false)}
-      />
-    )}
+    <Modal
+      visible={showLanguageModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowLanguageModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: isDark ? '#1c1c1e' : '#ffffff' }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {t('settings.selectLanguage')}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowLanguageModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={[styles.closeButtonText, { color: isDark ? '#0a84ff' : '#007aff' }]}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.languageList}>
+            {Object.entries(availableLocales).map(([code, name]) => (
+              <TouchableOpacity
+                key={code}
+                style={[
+                  styles.languageOption,
+                  {
+                    backgroundColor: code === locale ? (isDark ? '#2c2c2e' : '#f2f2f7') : 'transparent',
+                    borderBottomColor: isDark ? '#2c2c2e' : '#e5e5ea'
+                  }
+                ]}
+                onPress={() => handleLanguageSelect(code, name)}
+              >
+                <Text style={[
+                  styles.languageText,
+                  {
+                    color: isDark ? '#ffffff' : '#000000',
+                    fontWeight: code === locale ? '600' : '400'
+                  }
+                ]}>
+                  {name}
+                </Text>
+                {code === locale && (
+                  <Text style={[styles.checkmark, { color: isDark ? '#0a84ff' : '#007aff' }]}>
+                    ✓
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
     </SafeAreaView>
   );
 }
@@ -760,6 +782,55 @@ const styles = StyleSheet.create({
   },
   serverActionText: {
     fontSize: 13,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '70%',
+    minHeight: 300,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e5e5ea',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: '400',
+  },
+  languageList: {
+    maxHeight: 400,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  languageText: {
+    fontSize: 16,
+  },
+  checkmark: {
+    fontSize: 16,
     fontWeight: '600',
   },
 });
