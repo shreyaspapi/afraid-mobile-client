@@ -15,6 +15,18 @@
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/iOS/1.PNG" width="18%" alt="Dashboard" />
+  <img src="screenshots/iOS/2.PNG" width="18%" alt="Servers" />
+  <img src="screenshots/iOS/3.PNG" width="18%" alt="Docker" />
+  <img src="screenshots/iOS/4.PNG" width="18%" alt="VMs" />
+  <img src="screenshots/iOS/5.PNG" width="18%" alt="Settings" />
+</p>
+
+---
+
 ## Overview
 
 **Parity** is an open-source, cross-platform mobile application that brings comprehensive Unraid server management to your iOS and Android devices. Built with React Native and Expo, it provides real-time monitoring, intuitive controls, and powerful notifications—all wrapped in a beautiful, native mobile interface.
