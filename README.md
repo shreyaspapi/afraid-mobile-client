@@ -371,7 +371,7 @@ See our [full roadmap](docs/PRD.md#timeline--milestones) for more details.
 
 If you find Parity useful, please consider giving it a star on GitHub! It helps others discover the project.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/parity&type=Date)](https://star-history.com/#yourusername/parity&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=shreyaspapi/parity&type=Date)](https://star-history.com/#shreyaspapi/parity&Date)
 
 ---
 
