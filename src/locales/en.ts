@@ -89,6 +89,7 @@ export default {
     arrayDisks: 'Array Disks',
     of: 'of',
     unassignedDevices: 'Unassigned Devices',
+    cacheDrives: 'Cache Drives',
     // Alerts
     stopArrayTitle: 'Stop Array',
     stopArrayMessage: 'Stop will take the array off-line.',

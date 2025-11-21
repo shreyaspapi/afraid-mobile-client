@@ -298,6 +298,15 @@ export const GET_DASHBOARD_DATA = gql`
         fsType
         type
       }
+      caches {
+        name
+        size
+        status
+        temp
+        device
+        fsType
+        type
+      }
       boot {
         name
         device

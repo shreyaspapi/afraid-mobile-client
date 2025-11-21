@@ -42,6 +42,7 @@ export function DashboardScreen() {
     network: false,
     shares: false,
     disks: true,
+    cache: true,
   });
 
   // Calculate metrics for charts (must be done before any early returns to satisfy Rules of Hooks)
@@ -846,6 +847,59 @@ export function DashboardScreen() {
               <View style={styles.disksContainer}>
                 <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
                 {arrayInfo.disks.map((disk, index) => (
+                  <View key={index} style={styles.diskRow}>
+                    <View style={styles.diskInfo}>
+                      <View style={styles.diskHeader}>
+                        <Text style={[styles.diskName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                          {disk.name}
+                        </Text>
+                        <View style={[
+                          styles.statusIndicator,
+                          {
+                            backgroundColor: disk.status === 'DISK_OK' ? '#34c759' :
+                              disk.status === 'DISK_NP' ? '#8e8e93' : '#ff3b30',
+                          },
+                        ]} />
+                      </View>
+                      <View style={styles.diskDetails}>
+                        <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                          {formatBytes(Number(disk.size || 0) * 1024)}
+                        </Text>
+                        {disk.temp && (
+                          <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                            {disk.temp}°C
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Cache Drives - Collapsible */}
+        {arrayInfo && arrayInfo.caches && arrayInfo.caches.length > 0 && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('cache')}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {t('dashboard.cacheDrives')} ({arrayInfo.caches.length})
+                </Text>
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.cache ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            {expandedSections.cache && (
+              <View style={styles.disksContainer}>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {arrayInfo.caches.map((disk, index) => (
                   <View key={index} style={styles.diskRow}>
                     <View style={styles.diskInfo}>
                       <View style={styles.diskHeader}>

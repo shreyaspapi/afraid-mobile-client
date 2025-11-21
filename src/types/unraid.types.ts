@@ -113,6 +113,7 @@ export interface ArrayInfo {
   state: string;
   capacity: ArrayCapacity;
   disks?: Disk[];
+  caches?: Disk[];
   boot?: Disk;
 }
 
