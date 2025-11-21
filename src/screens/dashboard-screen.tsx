@@ -36,12 +36,13 @@ export function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [startArray, { loading: startingArray }] = useMutation(START_ARRAY);
   const [stopArray, { loading: stoppingArray }] = useMutation(STOP_ARRAY);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const [expandedSections, setExpandedSections] = useState < Record < string, boolean>> ({
     arrayControl: false,
     processor: true,
     network: false,
     shares: false,
     disks: true,
+    cache: true,
   });
 
   // Calculate metrics for charts (must be done before any early returns to satisfy Rules of Hooks)
@@ -53,7 +54,7 @@ export function DashboardScreen() {
 
   // Get memory info from metrics
   const memoryInfo = metrics?.memory;
-  const memoryPercentage = memoryInfo?.percentTotal || 
+  const memoryPercentage = memoryInfo?.percentTotal ||
     (memoryInfo ? calculatePercentage(Number(memoryInfo.used), Number(memoryInfo.total)) : 0);
 
   // Get CPU usage from metrics
@@ -79,7 +80,7 @@ export function DashboardScreen() {
   useFocusEffect(
     React.useCallback(() => {
       refetch();
-      return () => {};
+      return () => { };
     }, [refetch])
   );
 
@@ -99,9 +100,9 @@ export function DashboardScreen() {
   // Calculate disk usage percentage
   const diskPercentage = arrayInfo
     ? calculatePercentage(
-        Number(arrayInfo.capacity.disks.used),
-        Number(arrayInfo.capacity.disks.total)
-      )
+      Number(arrayInfo.capacity.disks.used),
+      Number(arrayInfo.capacity.disks.total)
+    )
     : 0;
 
   // Calculate flash device usage
@@ -112,15 +113,15 @@ export function DashboardScreen() {
 
   // Format current time
   const currentTime = systemInfo?.time ? new Date(systemInfo.time) : new Date();
-  const timeString = currentTime.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
+  const timeString = currentTime.toLocaleTimeString('en-US', {
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true 
+    hour12: true
   });
 
   // Get unassigned devices
   const allDisks = arrayInfo?.disks || [];
-  const unassignedDisks = allDisks.filter(disk => 
+  const unassignedDisks = allDisks.filter(disk =>
     disk.status === 'DISK_NP' || (disk.type === 'DATA' && disk.status !== 'DISK_OK')
   );
 
@@ -133,774 +134,837 @@ export function DashboardScreen() {
       style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]}
       edges={['top']}
     >
-    <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
-      ]}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
+      <ScrollView
+        style={[
+          styles.container,
+          { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
+        ]}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-          tintColor={isDark ? '#007aff' : '#007aff'}
-        />
-      }
-    >
-      {/* Demo Mode Banner */}
-      {isDemoMode && (
-        <View style={[styles.demoBanner, { backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5', borderColor: '#34c759' }]}>
-          <Text style={[styles.demoBannerText, { color: isDark ? '#ffffff' : '#000000' }]}>
-            {t('dashboard.demoMode')}
-          </Text>
-          <Text style={[styles.demoBannerSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-            {t('dashboard.demoModeSubtext')}
-          </Text>
-        </View>
-      )}
-
-      {/* Compact Server Header */}
-      {systemInfo && (
-        <View style={styles.headerSection}>
-          <View style={styles.serverRow}>
-            <Text style={[styles.serverName, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {vars?.name || systemInfo.os.hostname || 'Unraid Server'}
+            tintColor={isDark ? '#007aff' : '#007aff'}
+          />
+        }
+      >
+        {/* Demo Mode Banner */}
+        {isDemoMode && (
+          <View style={[styles.demoBanner, { backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5', borderColor: '#34c759' }]}>
+            <Text style={[styles.demoBannerText, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {t('dashboard.demoMode')}
             </Text>
-            <Text style={[styles.timeText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              {timeString}
+            <Text style={[styles.demoBannerSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              {t('dashboard.demoModeSubtext')}
             </Text>
           </View>
-          {systemInfo.os.uptime !== undefined && (
-            <Text style={[styles.uptimeText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              {t('dashboard.uptime')}: {formatUptime(systemInfo.os.uptime)} • {systemInfo.os.distro || 'Unraid'} {vars?.version || ''}
-            </Text>
-          )}
-        </View>
-      )}
+        )}
 
-      {/* Quick Metrics Row */}
-      {metrics && (
-        <View style={styles.metricsRow}>
-          <MetricCard
-            label={t('dashboard.ram')}
-            value={memoryPercentage.toFixed(0)}
-            unit="%"
-            subtitle={memoryInfo ? formatBytes(Number(memoryInfo.used)) : ''}
-            status={memoryPercentage > 90 ? 'critical' : memoryPercentage > 75 ? 'warning' : 'good'}
-          />
-          <MetricCard
-            label={t('dashboard.cpu')}
-            value={cpuUsage.toFixed(0)}
-            unit="%"
-            subtitle={`${systemInfo?.cpu.cores || 0} cores`}
-            status={cpuUsage > 90 ? 'critical' : cpuUsage > 75 ? 'warning' : 'good'}
-          />
-          <MetricCard
-            label="ARRAY"
-            value={diskPercentage.toFixed(0)}
-            unit="%"
-            subtitle={arrayInfo ? formatBytes(Number(arrayInfo.capacity.disks.used)) : ''}
-            status={diskPercentage > 90 ? 'critical' : diskPercentage > 75 ? 'warning' : 'good'}
-          />
-        </View>
-      )}
-
-      {/* Performance Charts */}
-      {metrics && (
-        <Card>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.performanceTrends')}
-            </Text>
-          </View>
-          
-          {hasEnoughData ? (
-            <View style={styles.chartsContainer}>
-              <LineChart
-                data={cpuChartData}
-                width={Dimensions.get('window').width - 64}
-                height={140}
-                label={t('dashboard.cpuUsage')}
-                color="#007aff"
-                maxValue={100}
-                minValue={0}
-              />
-              
-              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 16 }]} />
-              
-              <LineChart
-                data={memoryChartData}
-                width={Dimensions.get('window').width - 64}
-                height={140}
-                label="Memory Usage"
-                color="#34c759"
-                maxValue={100}
-                minValue={0}
-              />
-            </View>
-          ) : (
-            <View style={{ padding: 20, alignItems: 'center' }}>
-              <Text style={[{ fontSize: 13, color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                Collecting data...
+        {/* Compact Server Header */}
+        {systemInfo && (
+          <View style={styles.headerSection}>
+            <View style={styles.serverRow}>
+              <Text style={[styles.serverName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {vars?.name || systemInfo.os.hostname || 'Unraid Server'}
+              </Text>
+              <Text style={[styles.timeText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                {timeString}
               </Text>
             </View>
-          )}
-        </Card>
-      )}
-
-      {/* System Overview with Circular Progress */}
-      {metrics && (
-        <Card>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.systemOverview')}
-            </Text>
+            {systemInfo.os.uptime !== undefined && (
+              <Text style={[styles.uptimeText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                {t('dashboard.uptime')}: {formatUptime(systemInfo.os.uptime)} • {systemInfo.os.distro || 'Unraid'} {vars?.version || ''}
+              </Text>
+            )}
           </View>
-          
-          <View style={styles.circularProgressRow}>
-            <CircularProgress
-              percentage={memoryPercentage}
-              label={t('dashboard.ramUsage')}
-              size={75}
+        )}
+
+        {/* Quick Metrics Row */}
+        {metrics && (
+          <View style={styles.metricsRow}>
+            <MetricCard
+              label={t('dashboard.ram')}
+              value={memoryPercentage.toFixed(0)}
+              unit="%"
+              subtitle={memoryInfo ? formatBytes(Number(memoryInfo.used)) : ''}
+              status={memoryPercentage > 90 ? 'critical' : memoryPercentage > 75 ? 'warning' : 'good'}
             />
-            <CircularProgress
-              percentage={flashPercentage}
-              label={t('dashboard.flash')}
-              size={75}
-            />
-            <CircularProgress
-              percentage={diskPercentage}
-              label={t('dashboard.storage')}
-              size={75}
-            />
-            <CircularProgress
-              percentage={cpuUsage}
+            <MetricCard
               label={t('dashboard.cpu')}
-              size={75}
+              value={cpuUsage.toFixed(0)}
+              unit="%"
+              subtitle={`${systemInfo?.cpu.cores || 0} cores`}
+              status={cpuUsage > 90 ? 'critical' : cpuUsage > 75 ? 'warning' : 'good'}
+            />
+            <MetricCard
+              label="ARRAY"
+              value={diskPercentage.toFixed(0)}
+              unit="%"
+              subtitle={arrayInfo ? formatBytes(Number(arrayInfo.capacity.disks.used) * 1024) : ''}
+              status={diskPercentage > 90 ? 'critical' : diskPercentage > 75 ? 'warning' : 'good'}
             />
           </View>
+        )}
 
-          <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
-
-          <View style={styles.statsGrid}>
-            {memoryInfo && (
-              <View style={styles.statColumn}>
-                <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  {t('dashboard.totalRam')}
-                </Text>
-                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  {formatBytes(Number(memoryInfo.total))}
-                </Text>
-              </View>
-            )}
-            {arrayInfo && (
-              <View style={styles.statColumn}>
-                <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  {t('dashboard.arrayStatus')}
-                </Text>
-                <Text style={[
-                  styles.statValue,
-                  { color: arrayInfo.state?.toLowerCase() === 'started' ? '#34c759' : '#ff9500' }
-                ]}>
-                  {arrayInfo.state}
-                </Text>
-              </View>
-            )}
-          </View>
-        </Card>
-      )}
-
-      {/* Array Control */}
-      {arrayInfo && (
-        <Card>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('arrayControl')}
-          >
-            <View>
+        {/* Performance Charts */}
+        {metrics && (
+          <Card>
+            <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {t('dashboard.arrayControl')}
-              </Text>
-              <Text style={[
-                styles.compactSubtext, 
-                { 
-                  color: arrayInfo.state?.toLowerCase() === 'started' 
-                    ? '#34c759' 
-                    : (isDark ? '#8e8e93' : '#6e6e73')
-                }
-              ]}>
-                {t('dashboard.status')}: {arrayInfo.state}
+                {t('dashboard.performanceTrends')}
               </Text>
             </View>
-            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-              {expandedSections.arrayControl ? '−' : '+'}
-            </Text>
-          </TouchableOpacity>
 
-          {expandedSections.arrayControl && (
-            <>
-          {/* Start/Stop Button with Description */}
-          {arrayInfo.state?.toLowerCase() === 'started' ? (
-            <View style={styles.operationRow}>
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  {
-                    backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
-                    borderColor: '#ff3b30',
-                    opacity: (startingArray || stoppingArray) ? 0.5 : 1,
-                  }
-                ]}
-                disabled={startingArray || stoppingArray}
-                onPress={async () => {
-                  Alert.alert(
-                    t('dashboard.stopArrayTitle'),
-                    t('dashboard.stopArrayMessage'),
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Stop',
-                        style: 'destructive',
-                        onPress: async () => {
-                          if (isDemoMode) {
-                            Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
-                            return;
-                          }
-                          await stopArray();
-                          await refetch();
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
-                  {t('dashboard.stop')}
+            {hasEnoughData ? (
+              <View style={styles.chartsContainer}>
+                <LineChart
+                  data={cpuChartData}
+                  width={Dimensions.get('window').width - 64}
+                  height={140}
+                  label={t('dashboard.cpuUsage')}
+                  color="#007aff"
+                  maxValue={100}
+                  minValue={0}
+                />
+
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 16 }]} />
+
+                <LineChart
+                  data={memoryChartData}
+                  width={Dimensions.get('window').width - 64}
+                  height={140}
+                  label="Memory Usage"
+                  color="#34c759"
+                  maxValue={100}
+                  minValue={0}
+                />
+              </View>
+            ) : (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={[{ fontSize: 13, color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  Collecting data...
                 </Text>
-              </TouchableOpacity>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                <Text style={{ fontWeight: '600' }}>Stop</Text> will take the array off-line.
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.operationRow}>
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  {
-                    backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5',
-                    borderColor: '#34c759',
-                    opacity: (startingArray || stoppingArray) ? 0.5 : 1,
-                  }
-                ]}
-                disabled={startingArray || stoppingArray}
-                onPress={async () => {
-                  if (isDemoMode) {
-                    Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
-                    return;
-                  }
-                  try {
-                    await startArray();
-                    await refetch();
-                  } catch (e) {
-                    // no-op
-                  }
-                }}
-              >
-                <Text style={[styles.operationButtonText, { color: '#34c759' }]}>
-                  {t('dashboard.start')}
-                </Text>
-              </TouchableOpacity>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                <Text style={{ fontWeight: '600' }}>Start</Text> will bring the array online.
-              </Text>
-            </View>
-          )}
+              </View>
+            )}
+          </Card>
+        )}
 
-          <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+        {/* System Overview with Circular Progress */}
+        {metrics && (
+          <Card>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.systemOverview')}
+              </Text>
+            </View>
 
-          {/* Spin Up/Down Row */}
-          <View style={styles.operationRow}>
-            <View style={styles.twoButtonRow}>
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  styles.halfButton,
-                  {
-                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
-                    borderColor: '#ff9500',
-                  }
-                ]}
-                disabled={arrayInfo.state?.toLowerCase() !== 'started'}
-                onPress={() => {
-                  Alert.alert(
-                    t('dashboard.spinUpTitle'),
-                    t('dashboard.spinUpMessage'),
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Spin Up',
-                        onPress: () => {
-                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <Text style={[
-                  styles.operationButtonText,
-                  { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
-                ]}>
-                  {t('dashboard.spinUp')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  styles.halfButton,
-                  {
-                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
-                    borderColor: '#ff9500',
-                  }
-                ]}
-                disabled={arrayInfo.state?.toLowerCase() !== 'started'}
-                onPress={() => {
-                  Alert.alert(
-                    t('dashboard.spinDownTitle'),
-                    t('dashboard.spinDownMessage'),
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Spin Down',
-                        onPress: () => {
-                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <Text style={[
-                  styles.operationButtonText,
-                  { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
-                ]}>
-                  {t('dashboard.spinDown')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                <Text style={{ fontWeight: '600' }}>Spin Up</Text> will immediately spin up all disks.
-              </Text>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
-                <Text style={{ fontWeight: '600' }}>Spin Down</Text> will immediately spin down all disks.
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
-
-          {/* Reboot/Shutdown Row */}
-          <View style={styles.operationRow}>
-            <View style={styles.twoButtonRow}>
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  styles.halfButton,
-                  {
-                    backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
-                    borderColor: '#ff9500',
-                  }
-                ]}
-                onPress={() => {
-                  Alert.alert(
-                    t('dashboard.rebootTitle'),
-                    t('dashboard.rebootMessage'),
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Reboot',
-                        style: 'destructive',
-                        onPress: () => {
-                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <Text style={[styles.operationButtonText, { color: '#ff9500' }]}>
-                  {t('dashboard.reboot')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.operationButton,
-                  styles.halfButton,
-                  {
-                    backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
-                    borderColor: '#ff3b30',
-                  }
-                ]}
-                onPress={() => {
-                  Alert.alert(
-                    t('dashboard.shutdownTitle'),
-                    t('dashboard.shutdownMessage'),
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Shutdown',
-                        style: 'destructive',
-                        onPress: () => {
-                          Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
-                  {t('dashboard.shutdown')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                <Text style={{ fontWeight: '600' }}>Reboot</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system reset.
-              </Text>
-              <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
-                <Text style={{ fontWeight: '600' }}>Shutdown</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system power down.
-              </Text>
-            </View>
-          </View>
-            </>
-          )}
-        </Card>
-      )}
-
-      {/* Boot Device */}
-      {flashDisk && (
-        <Card>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.bootDevice')}
-            </Text>
-          </View>
-          
-          <View style={styles.bootDeviceContainer}>
-            <View style={styles.bootDeviceRow}>
-              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {t('dashboard.device')}
-              </Text>
-              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                Flash ({flashDisk.device || flashDisk.name})
-              </Text>
-            </View>
-            
-            <View style={styles.bootDeviceRow}>
-              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {t('dashboard.filesystem')}
-              </Text>
-              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {flashDisk.fsType || 'vfat'}
-              </Text>
-            </View>
-            
-            <View style={styles.bootDeviceRow}>
-              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {t('dashboard.size')}
-              </Text>
-              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {formatBytes(Number(flashDisk.fsSize || flashDisk.size || 0))}
-              </Text>
-            </View>
-            
-            <View style={styles.bootDeviceRow}>
-              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {t('dashboard.used')}
-              </Text>
-              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {formatBytes(Number(flashDisk.fsUsed || 0))}
-              </Text>
-            </View>
-            
-            <View style={styles.bootDeviceRow}>
-              <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {t('dashboard.free')}
-              </Text>
-              <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {formatBytes(Number(flashDisk.fsFree || 0))}
-              </Text>
-            </View>
-          </View>
-          
-          {flashDisk.fsSize && (
-            <>
-              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 12 }]} />
-              <ProgressBar
-                percentage={flashPercentage}
-                label={`${flashPercentage.toFixed(1)}% used`}
-                height={6}
+            <View style={styles.circularProgressRow}>
+              <CircularProgress
+                percentage={memoryPercentage}
+                label={t('dashboard.ramUsage')}
+                size={75}
               />
-            </>
-          )}
-        </Card>
-      )}
-
-      {/* Motherboard - Compact */}
-      {systemInfo?.baseboard && (
-        <Card>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.motherboard')}
-            </Text>
-          </View>
-          <Text style={[styles.compactValue, { color: isDark ? '#ffffff' : '#000000' }]}>
-            {systemInfo.baseboard.manufacturer} {systemInfo.baseboard.model}
-          </Text>
-          {systemInfo.baseboard.version && (
-            <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-              {systemInfo.baseboard.version}
-            </Text>
-          )}
-        </Card>
-      )}
-
-      {/* Processor - Collapsible */}
-      {systemInfo && cpuMetrics && (
-        <Card>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('processor')}
-          >
-            <View>
-              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {t('dashboard.processor')}
-              </Text>
-              <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {systemInfo.cpu.brand}
-              </Text>
+              <CircularProgress
+                percentage={flashPercentage}
+                label={t('dashboard.flash')}
+                size={75}
+              />
+              <CircularProgress
+                percentage={diskPercentage}
+                label={t('dashboard.storage')}
+                size={75}
+              />
+              <CircularProgress
+                percentage={cpuUsage}
+                label={t('dashboard.cpu')}
+                size={75}
+              />
             </View>
-            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-              {expandedSections.processor ? '−' : '+'}
-            </Text>
-          </TouchableOpacity>
-          
-          <View style={styles.processorSummary}>
-            <Text style={[styles.loadText, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.load')}: <Text style={{ color: '#34c759' }}>{cpuUsage.toFixed(1)}%</Text>
-            </Text>
-          </View>
 
-          {expandedSections.processor && cpuMetrics.cpus && cpuMetrics.cpus.length > 0 && (
-            <View style={styles.coresContainer}>
-              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
-              {cpuMetrics.cpus.slice(0, 12).map((core, index) => (
-                <View key={index} style={styles.coreItem}>
-                  <Text style={[styles.coreLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                    CPU {index}
+            <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+
+            <View style={styles.statsGrid}>
+              {memoryInfo && (
+                <View style={styles.statColumn}>
+                  <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                    {t('dashboard.totalRam')}
                   </Text>
-                  <View style={styles.coreProgress}>
-                    <View
+                  <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                    {formatBytes(Number(memoryInfo.total))}
+                  </Text>
+                </View>
+              )}
+              {arrayInfo && (
+                <View style={styles.statColumn}>
+                  <Text style={[styles.statLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                    {t('dashboard.arrayStatus')}
+                  </Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: arrayInfo.state?.toLowerCase() === 'started' ? '#34c759' : '#ff9500' }
+                  ]}>
+                    {arrayInfo.state}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Card>
+        )}
+
+        {/* Array Control */}
+        {arrayInfo && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('arrayControl')}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {t('dashboard.arrayControl')}
+                </Text>
+                <Text style={[
+                  styles.compactSubtext,
+                  {
+                    color: arrayInfo.state?.toLowerCase() === 'started'
+                      ? '#34c759'
+                      : (isDark ? '#8e8e93' : '#6e6e73')
+                  }
+                ]}>
+                  {t('dashboard.status')}: {arrayInfo.state}
+                </Text>
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.arrayControl ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            {expandedSections.arrayControl && (
+              <>
+                {/* Start/Stop Button with Description */}
+                {arrayInfo.state?.toLowerCase() === 'started' ? (
+                  <View style={styles.operationRow}>
+                    <TouchableOpacity
                       style={[
-                        styles.coreProgressBar,
+                        styles.operationButton,
                         {
-                          width: `${Math.min(core.percentTotal, 100)}%`,
-                          backgroundColor: core.percentTotal > 80 ? '#ff3b30' : 
-                                         core.percentTotal > 50 ? '#ff9500' : '#34c759',
-                        },
+                          backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
+                          borderColor: '#ff3b30',
+                          opacity: (startingArray || stoppingArray) ? 0.5 : 1,
+                        }
                       ]}
-                    />
-                  </View>
-                  <Text style={[styles.corePercentage, { color: isDark ? '#ffffff' : '#000000' }]}>
-                    {core.percentTotal.toFixed(0)}%
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </Card>
-      )}
-
-      {/* Network Interfaces - Collapsible */}
-      {systemInfo?.devices?.network && systemInfo.devices.network.length > 0 && (
-        <Card>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('network')}
-          >
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.networkInterfaces')} ({systemInfo.devices.network.length})
-            </Text>
-            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-              {expandedSections.network ? '−' : '+'}
-            </Text>
-          </TouchableOpacity>
-
-          {expandedSections.network && (
-            <View style={styles.interfacesContainer}>
-              {systemInfo.devices.network.map((iface, index) => (
-                <View key={index} style={styles.interfaceRow}>
-                  <View style={styles.interfaceInfo}>
-                    <Text style={[styles.interfaceName, { color: isDark ? '#ffffff' : '#000000' }]}>
-                      {iface.iface}
-                    </Text>
-                    {iface.model && (
-                      <Text style={[styles.interfaceDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                        {iface.model}
+                      disabled={startingArray || stoppingArray}
+                      onPress={async () => {
+                        Alert.alert(
+                          t('dashboard.stopArrayTitle'),
+                          t('dashboard.stopArrayMessage'),
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Stop',
+                              style: 'destructive',
+                              onPress: async () => {
+                                if (isDemoMode) {
+                                  Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
+                                  return;
+                                }
+                                await stopArray();
+                                await refetch();
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
+                        {t('dashboard.stop')}
                       </Text>
-                    )}
+                    </TouchableOpacity>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                      <Text style={{ fontWeight: '600' }}>Stop</Text> will take the array off-line.
+                    </Text>
                   </View>
-                  {iface.speed && (
-                    <Text style={[styles.interfaceSpeed, { color: '#34c759' }]}>
-                      {iface.speed}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-        </Card>
-      )}
-
-      {/* Shares - Collapsible */}
-      {shares && shares.length > 0 && (
-        <Card>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('shares')}
-          >
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.shares')} ({shares.length})
-            </Text>
-            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-              {expandedSections.shares ? '−' : '+'}
-            </Text>
-          </TouchableOpacity>
-
-          {expandedSections.shares && (
-            <View style={styles.sharesContainer}>
-              {shares.map((share, index) => (
-                <View key={index} style={styles.shareRow}>
-                  <View style={styles.shareInfo}>
-                    <Text style={[styles.shareName, { color: isDark ? '#ffffff' : '#000000' }]}>
-                      {share.name}
-                    </Text>
-                    {share.size && (
-                      <Text style={[styles.shareSize, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                        {formatBytes(Number(share.used || 0))} / {formatBytes(Number(share.size))}
+                ) : (
+                  <View style={styles.operationRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.operationButton,
+                        {
+                          backgroundColor: isDark ? '#1c2c1c' : '#e5ffe5',
+                          borderColor: '#34c759',
+                          opacity: (startingArray || stoppingArray) ? 0.5 : 1,
+                        }
+                      ]}
+                      disabled={startingArray || stoppingArray}
+                      onPress={async () => {
+                        if (isDemoMode) {
+                          Alert.alert(t('dashboard.demoMode'), t('dashboard.demoModeDisabled'));
+                          return;
+                        }
+                        try {
+                          await startArray();
+                          await refetch();
+                        } catch (e) {
+                          // no-op
+                        }
+                      }}
+                    >
+                      <Text style={[styles.operationButtonText, { color: '#34c759' }]}>
+                        {t('dashboard.start')}
                       </Text>
-                    )}
+                    </TouchableOpacity>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                      <Text style={{ fontWeight: '600' }}>Start</Text> will bring the array online.
+                    </Text>
                   </View>
-                  {share.used !== undefined && share.size && (
-                    <View style={styles.shareProgress}>
+                )}
+
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+
+                {/* Spin Up/Down Row */}
+                <View style={styles.operationRow}>
+                  <View style={styles.twoButtonRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.operationButton,
+                        styles.halfButton,
+                        {
+                          backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                          borderColor: '#ff9500',
+                        }
+                      ]}
+                      disabled={arrayInfo.state?.toLowerCase() !== 'started'}
+                      onPress={() => {
+                        Alert.alert(
+                          t('dashboard.spinUpTitle'),
+                          t('dashboard.spinUpMessage'),
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Spin Up',
+                              onPress: () => {
+                                Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[
+                        styles.operationButtonText,
+                        { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
+                      ]}>
+                        {t('dashboard.spinUp')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.operationButton,
+                        styles.halfButton,
+                        {
+                          backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                          borderColor: '#ff9500',
+                        }
+                      ]}
+                      disabled={arrayInfo.state?.toLowerCase() !== 'started'}
+                      onPress={() => {
+                        Alert.alert(
+                          t('dashboard.spinDownTitle'),
+                          t('dashboard.spinDownMessage'),
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Spin Down',
+                              onPress: () => {
+                                Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[
+                        styles.operationButtonText,
+                        { color: arrayInfo.state?.toLowerCase() !== 'started' ? '#8e8e93' : '#ff9500' }
+                      ]}>
+                        {t('dashboard.spinDown')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                      <Text style={{ fontWeight: '600' }}>Spin Up</Text> will immediately spin up all disks.
+                    </Text>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
+                      <Text style={{ fontWeight: '600' }}>Spin Down</Text> will immediately spin down all disks.
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+
+                {/* Reboot/Shutdown Row */}
+                <View style={styles.operationRow}>
+                  <View style={styles.twoButtonRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.operationButton,
+                        styles.halfButton,
+                        {
+                          backgroundColor: isDark ? '#1c1c1e' : '#f2f2f7',
+                          borderColor: '#ff9500',
+                        }
+                      ]}
+                      onPress={() => {
+                        Alert.alert(
+                          t('dashboard.rebootTitle'),
+                          t('dashboard.rebootMessage'),
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Reboot',
+                              style: 'destructive',
+                              onPress: () => {
+                                Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[styles.operationButtonText, { color: '#ff9500' }]}>
+                        {t('dashboard.reboot')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.operationButton,
+                        styles.halfButton,
+                        {
+                          backgroundColor: isDark ? '#2c1c1c' : '#ffe5e5',
+                          borderColor: '#ff3b30',
+                        }
+                      ]}
+                      onPress={() => {
+                        Alert.alert(
+                          t('dashboard.shutdownTitle'),
+                          t('dashboard.shutdownMessage'),
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Shutdown',
+                              style: 'destructive',
+                              onPress: () => {
+                                Alert.alert(t('common.ok'), t('dashboard.comingSoon'));
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[styles.operationButtonText, { color: '#ff3b30' }]}>
+                        {t('dashboard.shutdown')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                      <Text style={{ fontWeight: '600' }}>Reboot</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system reset.
+                    </Text>
+                    <Text style={[styles.operationDescription, { color: isDark ? '#8e8e93' : '#6e6e73', marginTop: 4 }]}>
+                      <Text style={{ fontWeight: '600' }}>Shutdown</Text> will activate a <Text style={{ fontStyle: 'italic' }}>clean</Text> system power down.
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </Card>
+        )}
+
+        {/* Boot Device */}
+        {flashDisk && (
+          <Card>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.bootDevice')}
+              </Text>
+            </View>
+
+            <View style={styles.bootDeviceContainer}>
+              <View style={styles.bootDeviceRow}>
+                <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {t('dashboard.device')}
+                </Text>
+                <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  Flash ({flashDisk.device || flashDisk.name})
+                </Text>
+              </View>
+
+              <View style={styles.bootDeviceRow}>
+                <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {t('dashboard.filesystem')}
+                </Text>
+                <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {flashDisk.fsType || 'vfat'}
+                </Text>
+              </View>
+
+              <View style={styles.bootDeviceRow}>
+                <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {t('dashboard.size')}
+                </Text>
+                <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {formatBytes(Number(flashDisk.fsSize || flashDisk.size || 0) * 1024)}
+                </Text>
+              </View>
+
+              <View style={styles.bootDeviceRow}>
+                <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {t('dashboard.used')}
+                </Text>
+                <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {formatBytes(Number(flashDisk.fsUsed || 0) * 1024)}
+                </Text>
+              </View>
+
+              <View style={styles.bootDeviceRow}>
+                <Text style={[styles.bootDeviceLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {t('dashboard.free')}
+                </Text>
+                <Text style={[styles.bootDeviceValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {formatBytes(Number(flashDisk.fsFree || 0) * 1024)}
+                </Text>
+              </View>
+            </View>
+
+            {flashDisk.fsSize && (
+              <>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea', marginVertical: 12 }]} />
+                <ProgressBar
+                  percentage={flashPercentage}
+                  label={`${flashPercentage.toFixed(1)}% used`}
+                  height={6}
+                />
+              </>
+            )}
+          </Card>
+        )}
+
+        {/* Motherboard - Compact */}
+        {systemInfo?.baseboard && (
+          <Card>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.motherboard')}
+              </Text>
+            </View>
+            <Text style={[styles.compactValue, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {systemInfo.baseboard.manufacturer} {systemInfo.baseboard.model}
+            </Text>
+            {systemInfo.baseboard.version && (
+              <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                {systemInfo.baseboard.version}
+              </Text>
+            )}
+          </Card>
+        )}
+
+        {/* Processor - Collapsible */}
+        {systemInfo && cpuMetrics && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('processor')}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {t('dashboard.processor')}
+                </Text>
+                <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {systemInfo.cpu.brand}
+                </Text>
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.processor ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.processorSummary}>
+              <Text style={[styles.loadText, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.load')}: <Text style={{ color: '#34c759' }}>{cpuUsage.toFixed(1)}%</Text>
+              </Text>
+            </View>
+
+            {expandedSections.processor && cpuMetrics.cpus && cpuMetrics.cpus.length > 0 && (
+              <View style={styles.coresContainer}>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {cpuMetrics.cpus.slice(0, 12).map((core, index) => (
+                  <View key={index} style={styles.coreItem}>
+                    <Text style={[styles.coreLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                      CPU {index}
+                    </Text>
+                    <View style={styles.coreProgress}>
                       <View
                         style={[
-                          styles.shareProgressBar,
+                          styles.coreProgressBar,
                           {
-                            width: `${calculatePercentage(Number(share.used), Number(share.size))}%`,
-                            backgroundColor: '#007aff',
+                            width: `${Math.min(core.percentTotal, 100)}%`,
+                            backgroundColor: core.percentTotal > 80 ? '#ff3b30' :
+                              core.percentTotal > 50 ? '#ff9500' : '#34c759',
                           },
                         ]}
                       />
                     </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-        </Card>
-      )}
+                    <Text style={[styles.corePercentage, { color: isDark ? '#ffffff' : '#000000' }]}>
+                      {core.percentTotal.toFixed(0)}%
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
 
-      {/* Array Disks - Collapsible */}
-      {arrayInfo && arrayInfo.disks && arrayInfo.disks.length > 0 && (
-        <Card>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('disks')}
-          >
-            <View>
+        {/* Network Interfaces - Collapsible */}
+        {systemInfo?.devices?.network && systemInfo.devices.network.length > 0 && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('network')}
+            >
               <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                {t('dashboard.arrayDisks')} ({arrayInfo.disks.length})
+                {t('dashboard.networkInterfaces')} ({systemInfo.devices.network.length})
               </Text>
-              <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                {formatBytes(Number(arrayInfo.capacity.disks.used))} {t('dashboard.of')} {formatBytes(Number(arrayInfo.capacity.disks.total))} {t('dashboard.used')}
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.network ? '−' : '+'}
               </Text>
-            </View>
-            <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
-              {expandedSections.disks ? '−' : '+'}
-            </Text>
-          </TouchableOpacity>
+            </TouchableOpacity>
 
-          <ProgressBar
-            percentage={diskPercentage}
-            label=""
-            hideLabel
-            height={6}
-          />
-
-          {expandedSections.disks && (
-            <View style={styles.disksContainer}>
-              <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
-              {arrayInfo.disks.map((disk, index) => (
-                <View key={index} style={styles.diskRow}>
-                  <View style={styles.diskInfo}>
-                    <View style={styles.diskHeader}>
-                      <Text style={[styles.diskName, { color: isDark ? '#ffffff' : '#000000' }]}>
-                        {disk.name}
+            {expandedSections.network && (
+              <View style={styles.interfacesContainer}>
+                {systemInfo.devices.network.map((iface, index) => (
+                  <View key={index} style={styles.interfaceRow}>
+                    <View style={styles.interfaceInfo}>
+                      <Text style={[styles.interfaceName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                        {iface.iface}
                       </Text>
-                      <View style={[
-                        styles.statusIndicator,
-                        {
-                          backgroundColor: disk.status === 'DISK_OK' ? '#34c759' :
-                                         disk.status === 'DISK_NP' ? '#8e8e93' : '#ff3b30',
-                        },
-                      ]} />
-                    </View>
-                    <View style={styles.diskDetails}>
-                      <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                        {formatBytes(Number(disk.size || 0))}
-                      </Text>
-                      {disk.temp && (
-                        <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                          {disk.temp}°C
+                      {iface.model && (
+                        <Text style={[styles.interfaceDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                          {iface.model}
                         </Text>
                       )}
                     </View>
+                    {iface.speed && (
+                      <Text style={[styles.interfaceSpeed, { color: '#34c759' }]}>
+                        {iface.speed}
+                      </Text>
+                    )}
                   </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Shares - Collapsible */}
+        {shares && shares.length > 0 && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('shares')}
+            >
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.shares')} ({shares.length})
+              </Text>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.shares ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            {expandedSections.shares && (
+              <View style={styles.sharesContainer}>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {shares.map((share, index) => {
+                  const sharePercentage = share.size ? calculatePercentage(Number(share.used || 0), Number(share.size)) : 0;
+                  return (
+                    <View key={index} style={styles.shareRow}>
+                      <View style={styles.shareHeader}>
+                        <Text style={[styles.shareName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                          {share.name}
+                        </Text>
+                        {share.size && (
+                          <Text style={[styles.sharePercentage, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                            {sharePercentage.toFixed(1)}%
+                          </Text>
+                        )}
+                      </View>
+                      {share.size && (
+                        <Text style={[styles.shareSize, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                          {formatBytes(Number(share.used || 0) * 1024)} / {formatBytes(Number(share.size) * 1024)}
+                        </Text>
+                      )}
+                      {share.used !== undefined && share.size && (
+                        <View style={styles.shareProgressContainer}>
+                          <View
+                            style={[
+                              styles.shareProgressBar,
+                              {
+                                width: `${sharePercentage}%`,
+                                backgroundColor: sharePercentage > 90 ? '#ff3b30' :
+                                  sharePercentage > 75 ? '#ff9500' : '#007aff',
+                              },
+                            ]}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Array Disks - Collapsible */}
+        {arrayInfo && arrayInfo.disks && arrayInfo.disks.length > 0 && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('disks')}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {t('dashboard.arrayDisks')} ({arrayInfo.disks.length})
+                </Text>
+                <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                  {formatBytes(Number(arrayInfo.capacity.disks.used) * 1024)} {t('dashboard.of')} {formatBytes(Number(arrayInfo.capacity.disks.total) * 1024)} {t('dashboard.used')}
+                </Text>
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.disks ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            <ProgressBar
+              percentage={diskPercentage}
+              label=""
+              hideLabel
+              height={6}
+            />
+
+            {expandedSections.disks && (
+              <View style={styles.disksContainer}>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {arrayInfo.disks.map((disk, index) => (
+                  <View key={index} style={styles.diskRow}>
+                    <View style={styles.diskInfo}>
+                      <View style={styles.diskHeader}>
+                        <Text style={[styles.diskName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                          {disk.name}
+                        </Text>
+                        <View style={[
+                          styles.statusIndicator,
+                          {
+                            backgroundColor: disk.status === 'DISK_OK' ? '#34c759' :
+                              disk.status === 'DISK_NP' ? '#8e8e93' : '#ff3b30',
+                          },
+                        ]} />
+                      </View>
+                      <View style={styles.diskDetails}>
+                        <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                          {formatBytes(Number(disk.size || 0) * 1024)}
+                        </Text>
+                        {disk.temp && (
+                          <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                            {disk.temp}°C
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Cache Drives - Collapsible */}
+        {arrayInfo && arrayInfo.caches && arrayInfo.caches.length > 0 && (
+          <Card>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('cache')}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {t('dashboard.cacheDrives')} ({arrayInfo.caches.length})
+                </Text>
+              </View>
+              <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
+                {expandedSections.cache ? '−' : '+'}
+              </Text>
+            </TouchableOpacity>
+
+            {expandedSections.cache && (
+              <View style={styles.disksContainer}>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {arrayInfo.caches.map((disk, index) => (
+                  <View key={index} style={styles.diskRow}>
+                    <View style={styles.diskInfo}>
+                      <View style={styles.diskHeader}>
+                        <Text style={[styles.diskName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                          {disk.name}
+                        </Text>
+                        <View style={[
+                          styles.statusIndicator,
+                          {
+                            backgroundColor: disk.status === 'DISK_OK' ? '#34c759' :
+                              disk.status === 'DISK_NP' ? '#8e8e93' : '#ff3b30',
+                          },
+                        ]} />
+                      </View>
+                      <View style={styles.diskDetails}>
+                        <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                          {formatBytes(Number(disk.size || 0) * 1024)}
+                        </Text>
+                        {disk.temp && (
+                          <Text style={[styles.diskDetail, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                            {disk.temp}°C
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Unassigned Devices */}
+        {unassignedDisks.length > 0 && (
+          <Card>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {t('dashboard.unassignedDevices')}
+              </Text>
+            </View>
+            <View style={styles.unassignedContainer}>
+              {unassignedDisks.map((disk, index) => (
+                <View key={index} style={styles.unassignedRow}>
+                  <Text style={[styles.unassignedDevice, { color: isDark ? '#ffffff' : '#000000' }]}>
+                    {disk.device || disk.name}
+                  </Text>
+                  <Text style={[styles.unassignedTemp, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                    {disk.temp ? `${disk.temp}°C` : '—'}
+                  </Text>
                 </View>
               ))}
             </View>
-          )}
-        </Card>
-      )}
-
-      {/* Unassigned Devices */}
-      {unassignedDisks.length > 0 && (
-        <Card>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('dashboard.unassignedDevices')}
-            </Text>
-          </View>
-          <View style={styles.unassignedContainer}>
-            {unassignedDisks.map((disk, index) => (
-              <View key={index} style={styles.unassignedRow}>
-                <Text style={[styles.unassignedDevice, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  {disk.device || disk.name}
-                </Text>
-                <Text style={[styles.unassignedTemp, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  {disk.temp ? `${disk.temp}°C` : '—'}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </Card>
-      )}
-    </ScrollView>
+          </Card>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -1053,13 +1117,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sharesContainer: {
-    gap: 12,
     marginTop: 8,
   },
   shareRow: {
-    gap: 8,
+    marginBottom: 16,
   },
-  shareInfo: {
+  shareHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1069,18 +1132,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
+  sharePercentage: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   shareSize: {
     fontSize: 12,
+    marginBottom: 6,
   },
-  shareProgress: {
-    height: 4,
+  shareProgressContainer: {
+    height: 6,
     backgroundColor: '#38383a',
-    borderRadius: 2,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   shareProgressBar: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   disksContainer: {
     marginTop: 8,

@@ -37,7 +37,7 @@ const createHttpLink = (serverIP: string) => {
 
   return new HttpLink({
     uri,
-    credentials: 'include',
+
   });
 };
 
@@ -88,7 +88,7 @@ const errorLink = onError((error: any) => {
 // Create Apollo Client instance with dynamic server IP
 const createApolloClient = async () => {
   const serverIP = await storageService.getServerIP();
-  
+
   if (!serverIP) {
     // Return a minimal client if no server is configured (before login)
     // This allows the app to render, but queries will fail gracefully
