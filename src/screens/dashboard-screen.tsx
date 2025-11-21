@@ -784,33 +784,43 @@ export function DashboardScreen() {
 
             {expandedSections.shares && (
               <View style={styles.sharesContainer}>
-                {shares.map((share, index) => (
-                  <View key={index} style={styles.shareRow}>
-                    <View style={styles.shareInfo}>
-                      <Text style={[styles.shareName, { color: isDark ? '#ffffff' : '#000000' }]}>
-                        {share.name}
-                      </Text>
+                <View style={[styles.divider, { backgroundColor: isDark ? '#2c2c2e' : '#e5e5ea' }]} />
+                {shares.map((share, index) => {
+                  const sharePercentage = share.size ? calculatePercentage(Number(share.used || 0), Number(share.size)) : 0;
+                  return (
+                    <View key={index} style={styles.shareRow}>
+                      <View style={styles.shareHeader}>
+                        <Text style={[styles.shareName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                          {share.name}
+                        </Text>
+                        {share.size && (
+                          <Text style={[styles.sharePercentage, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                            {sharePercentage.toFixed(1)}%
+                          </Text>
+                        )}
+                      </View>
                       {share.size && (
                         <Text style={[styles.shareSize, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
                           {formatBytes(Number(share.used || 0) * 1024)} / {formatBytes(Number(share.size) * 1024)}
                         </Text>
                       )}
+                      {share.used !== undefined && share.size && (
+                        <View style={styles.shareProgressContainer}>
+                          <View
+                            style={[
+                              styles.shareProgressBar,
+                              {
+                                width: `${sharePercentage}%`,
+                                backgroundColor: sharePercentage > 90 ? '#ff3b30' :
+                                  sharePercentage > 75 ? '#ff9500' : '#007aff',
+                              },
+                            ]}
+                          />
+                        </View>
+                      )}
                     </View>
-                    {share.used !== undefined && share.size && (
-                      <View style={styles.shareProgress}>
-                        <View
-                          style={[
-                            styles.shareProgressBar,
-                            {
-                              width: `${calculatePercentage(Number(share.used), Number(share.size))}%`,
-                              backgroundColor: '#007aff',
-                            },
-                          ]}
-                        />
-                      </View>
-                    )}
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             )}
           </Card>
@@ -1107,13 +1117,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sharesContainer: {
-    gap: 12,
     marginTop: 8,
   },
   shareRow: {
-    gap: 8,
+    marginBottom: 16,
   },
-  shareInfo: {
+  shareHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1123,18 +1132,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
+  sharePercentage: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   shareSize: {
     fontSize: 12,
+    marginBottom: 6,
   },
-  shareProgress: {
-    height: 4,
+  shareProgressContainer: {
+    height: 6,
     backgroundColor: '#38383a',
-    borderRadius: 2,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   shareProgressBar: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   disksContainer: {
     marginTop: 8,

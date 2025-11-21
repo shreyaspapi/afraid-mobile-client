@@ -168,19 +168,6 @@ export function NotificationsScreen() {
     }
   }, []);
 
-  if (!hasInitialData && !isDemoMode && loading) {
-    return <LoadingScreen message="Loading notifications..." />;
-  }
-
-  if (error && !hasInitialData) {
-    return (
-      <ErrorMessage
-        message={error.message || t('notifications.errorLoadingNotifications')}
-        onRetry={handleRefresh}
-      />
-    );
-  }
-
   const renderChip = useCallback((
     key: string,
     label: string,
@@ -474,6 +461,20 @@ export function NotificationsScreen() {
       {filterControls}
     </>
   ), [filterControls, isDark, summaryCard, t]);
+
+  // Early returns must come after all hooks
+  if (!hasInitialData && !isDemoMode && loading) {
+    return <LoadingScreen message="Loading notifications..." />;
+  }
+
+  if (error && !hasInitialData) {
+    return (
+      <ErrorMessage
+        message={error.message || t('notifications.errorLoadingNotifications')}
+        onRetry={handleRefresh}
+      />
+    );
+  }
 
   return (
     <SafeAreaView
