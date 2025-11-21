@@ -14,15 +14,15 @@ import { useApolloClient } from '@apollo/client/react';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -176,6 +176,64 @@ export function SettingsScreen() {
     return availableLocales[locale] || 'English';
   };
 
+  const languageModal = (
+    <Modal
+      visible={showLanguageModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowLanguageModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: isDark ? '#1c1c1e' : '#ffffff' }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {t('settings.selectLanguage')}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowLanguageModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={[styles.closeButtonText, { color: isDark ? '#0a84ff' : '#007aff' }]}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.languageList}>
+            {Object.entries(availableLocales).map(([code, name]) => (
+              <TouchableOpacity
+                key={code}
+                style={[
+                  styles.languageOption,
+                  {
+                    backgroundColor: code === locale ? (isDark ? '#2c2c2e' : '#f2f2f7') : 'transparent',
+                    borderBottomColor: isDark ? '#2c2c2e' : '#e5e5ea'
+                  }
+                ]}
+                onPress={() => handleLanguageSelect(code, name)}
+              >
+                <Text style={[
+                  styles.languageText,
+                  {
+                    color: isDark ? '#ffffff' : '#000000',
+                    fontWeight: code === locale ? '600' : '400'
+                  }
+                ]}>
+                  {name}
+                </Text>
+                {code === locale && (
+                  <Text style={[styles.checkmark, { color: isDark ? '#0a84ff' : '#007aff' }]}>
+                    ✓
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (Platform.OS === 'ios' && UiHost) {
     // Native iOS-styled Settings using Expo UI (SwiftUI)
     return (
@@ -296,6 +354,7 @@ export function SettingsScreen() {
             </UiSection>
           </UiForm>
         </UiHost>
+        {languageModal}
       </SafeAreaView>
     );
   }
@@ -583,61 +642,7 @@ export function SettingsScreen() {
       />
     )}
 
-    <Modal
-      visible={showLanguageModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowLanguageModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: isDark ? '#1c1c1e' : '#ffffff' }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              {t('settings.selectLanguage')}
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowLanguageModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={[styles.closeButtonText, { color: isDark ? '#0a84ff' : '#007aff' }]}>
-                ✕
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.languageList}>
-            {Object.entries(availableLocales).map(([code, name]) => (
-              <TouchableOpacity
-                key={code}
-                style={[
-                  styles.languageOption,
-                  {
-                    backgroundColor: code === locale ? (isDark ? '#2c2c2e' : '#f2f2f7') : 'transparent',
-                    borderBottomColor: isDark ? '#2c2c2e' : '#e5e5ea'
-                  }
-                ]}
-                onPress={() => handleLanguageSelect(code, name)}
-              >
-                <Text style={[
-                  styles.languageText,
-                  {
-                    color: isDark ? '#ffffff' : '#000000',
-                    fontWeight: code === locale ? '600' : '400'
-                  }
-                ]}>
-                  {name}
-                </Text>
-                {code === locale && (
-                  <Text style={[styles.checkmark, { color: isDark ? '#0a84ff' : '#007aff' }]}>
-                    ✓
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+    {languageModal}
     </SafeAreaView>
   );
 }

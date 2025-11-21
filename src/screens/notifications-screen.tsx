@@ -7,7 +7,7 @@ import { useLocalization } from '@/src/providers/localization-provider';
 import { useTheme } from '@/src/providers/theme-provider';
 import { DemoDataService } from '@/src/services/demo-data.service';
 import { useQuery } from '@apollo/client/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -43,6 +43,8 @@ interface NotificationsQueryData {
     list: NotificationItem[];
   };
 }
+
+type NotificationOverview = NotificationsQueryData['notifications']['overview'];
 
 interface NotificationFilterInput {
   type: NotificationTypeValue;
@@ -115,36 +117,62 @@ export function NotificationsScreen() {
     };
   }, [filterInput.limit, filterInput.offset, importanceFilter, isDemoMode, selectedType]);
 
-  const data = isDemoMode ? demoData ?? undefined : queryResult.data;
+  const notificationsPayload = isDemoMode ? demoData?.notifications : queryResult.data?.notifications;
+
+  const [renderedNotifications, setRenderedNotifications] = useState<NotificationItem[]>(
+    () => notificationsPayload?.list ?? []
+  );
+  const [overviewState, setOverviewState] = useState<NotificationOverview | null>(
+    () => notificationsPayload?.overview ?? null
+  );
+
+  useEffect(() => {
+    if (!notificationsPayload) {
+      return;
+    }
+
+    const nextList = notificationsPayload.list ?? [];
+    setRenderedNotifications((previous) =>
+      haveNotificationListsChanged(previous, nextList) ? nextList : previous
+    );
+
+    setOverviewState((previous) =>
+      haveOverviewChanged(previous, notificationsPayload.overview) ? notificationsPayload.overview : previous
+    );
+  }, [notificationsPayload]);
+
   const loading = isDemoMode ? false : queryResult.loading;
   const error = isDemoMode ? undefined : queryResult.error;
+  const networkStatus = isDemoMode ? 7 : queryResult.networkStatus;
+  const isRefetching = !isDemoMode && networkStatus === 4;
 
-  const notifications = data?.notifications?.list ?? [];
-  const overview = data?.notifications?.overview;
+  const notifications = renderedNotifications;
+  const overview = overviewState ?? notificationsPayload?.overview ?? null;
+  const hasInitialData = Boolean(notificationsPayload) || notifications.length > 0 || !!overview;
   const activeCounts =
     selectedType === 'UNREAD' ? overview?.unread : overview?.archive;
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (isDemoMode) {
       return;
     }
     await queryResult.refetch({ filter: filterInput });
-  };
+  }, [filterInput, isDemoMode, queryResult]);
 
-  const handleOpenLink = async (link?: string | null) => {
+  const handleOpenLink = useCallback(async (link?: string | null) => {
     if (!link) return;
     try {
       await Linking.openURL(link);
     } catch (err) {
       console.warn('Failed to open link', err);
     }
-  };
+  }, []);
 
-  if ((loading && !data) || (!data && !isDemoMode && queryResult.loading)) {
+  if (!hasInitialData && !isDemoMode && loading) {
     return <LoadingScreen message="Loading notifications..." />;
   }
 
-  if (error && !data) {
+  if (error && !hasInitialData) {
     return (
       <ErrorMessage
         message={error.message || t('notifications.errorLoadingNotifications')}
@@ -153,7 +181,7 @@ export function NotificationsScreen() {
     );
   }
 
-  const renderChip = (
+  const renderChip = useCallback((
     key: string,
     label: string,
     color: string,
@@ -183,9 +211,11 @@ export function NotificationsScreen() {
         </Text>
       </TouchableOpacity>
     );
-  };
+  }, []);
 
-  const renderNotificationItem = ({ item }: { item: NotificationItem }) => {
+  const keyExtractor = useCallback((item: NotificationItem) => item.id, []);
+
+  const renderNotificationItem = useCallback(({ item }: { item: NotificationItem }) => {
     const importanceColor = IMPORTANCE_COLORS[item.importance];
     const timestamp =
       item.formattedTimestamp ??
@@ -259,9 +289,9 @@ export function NotificationsScreen() {
         </View>
       </Card>
     );
-  };
+  }, [handleOpenLink, isDark, t]);
 
-  const summaryCard = (
+  const summaryCard = useMemo(() => (
     <Card>
       <Text
         style={[
@@ -382,9 +412,9 @@ export function NotificationsScreen() {
         </View>
       </View>
     </Card>
-  );
+  ), [activeCounts, isDark, selectedType, t]);
 
-  const filterControls = (
+  const filterControls = useMemo(() => (
     <>
       <View style={styles.chipRow}>
         {renderChip(
@@ -419,7 +449,31 @@ export function NotificationsScreen() {
         ))}
       </View>
     </>
-  );
+  ), [importanceFilter, renderChip, selectedType, t]);
+
+  const listHeaderComponent = useMemo(() => (
+    <>
+      <Text
+        style={[
+          styles.title,
+          { color: isDark ? '#ffffff' : '#000000' },
+        ]}
+      >
+        {t('notifications.title')}
+      </Text>
+      <Text
+        style={[
+          styles.subtitle,
+          { color: isDark ? '#8e8e93' : '#6e6e73' },
+        ]}
+      >
+        {t('notifications.subtitle')}
+      </Text>
+      <View style={{ height: 12 }} />
+      {summaryCard}
+      {filterControls}
+    </>
+  ), [filterControls, isDark, summaryCard, t]);
 
   return (
     <SafeAreaView
@@ -430,44 +484,26 @@ export function NotificationsScreen() {
       edges={['top']}
     >
       <FlatList
+        key={`${selectedType}-${importanceFilter}`}
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         renderItem={renderNotificationItem}
         style={[
           styles.container,
           { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
         ]}
         contentContainerStyle={styles.content}
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+        }}
         refreshControl={
           <RefreshControl
-            refreshing={!!loading && !isDemoMode}
+            refreshing={isRefetching}
             onRefresh={handleRefresh}
             tintColor="#007aff"
           />
         }
-        ListHeaderComponent={
-          <>
-            <Text
-              style={[
-                styles.title,
-                { color: isDark ? '#ffffff' : '#000000' },
-              ]}
-            >
-              {t('notifications.title')}
-            </Text>
-            <Text
-              style={[
-                styles.subtitle,
-                { color: isDark ? '#8e8e93' : '#6e6e73' },
-              ]}
-            >
-              {t('notifications.subtitle')}
-            </Text>
-            <View style={{ height: 12 }} />
-            {summaryCard}
-            {filterControls}
-          </>
-        }
+        ListHeaderComponent={listHeaderComponent}
         ListEmptyComponent={
           <Text
             style={[
@@ -482,6 +518,64 @@ export function NotificationsScreen() {
       />
     </SafeAreaView>
   );
+}
+
+function haveNotificationListsChanged(previous: NotificationItem[], next: NotificationItem[]) {
+  if (previous === next) {
+    return false;
+  }
+
+  if (previous.length !== next.length) {
+    return true;
+  }
+
+  for (let i = 0; i < next.length; i++) {
+    const prevItem = previous[i];
+    const nextItem = next[i];
+
+    if (!prevItem || !nextItem) {
+      return true;
+    }
+
+    if (
+      prevItem.id !== nextItem.id ||
+      prevItem.type !== nextItem.type ||
+      prevItem.importance !== nextItem.importance ||
+      prevItem.title !== nextItem.title ||
+      prevItem.subject !== nextItem.subject ||
+      prevItem.description !== nextItem.description ||
+      prevItem.link !== nextItem.link ||
+      prevItem.timestamp !== nextItem.timestamp ||
+      prevItem.formattedTimestamp !== nextItem.formattedTimestamp
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function haveOverviewChanged(previous: NotificationOverview | null, next?: NotificationOverview | null) {
+  if (previous === next) {
+    return false;
+  }
+
+  if (!previous || !next) {
+    return true;
+  }
+
+  const fields: Array<keyof NotificationCounts> = ['info', 'warning', 'alert', 'total'];
+
+  for (const field of fields) {
+    if (
+      previous.unread[field] !== next.unread[field] ||
+      previous.archive[field] !== next.archive[field]
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 const styles = StyleSheet.create({
