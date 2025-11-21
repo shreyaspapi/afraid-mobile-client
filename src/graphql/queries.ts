@@ -102,6 +102,11 @@ export const GET_ARRAY_STATUS = gql`
     array {
       state
       capacity {
+        kilobytes {
+          total
+          used
+          free
+        }
         disks {
           total
           used
@@ -283,6 +288,11 @@ export const GET_DASHBOARD_DATA = gql`
     array {
       state
       capacity {
+        kilobytes {
+          total
+          used
+          free
+        }
         disks {
           total
           used

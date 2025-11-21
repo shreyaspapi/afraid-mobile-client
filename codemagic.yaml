@@ -1,0 +1,33 @@
+workflows:
+  android-apk:
+    name: Android APK
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      android_signing:
+        - keystore_reference # You will need to upload your keystore to Codemagic and reference it here
+      groups:
+        - google_play # Useful if you plan to publish to Play Store
+      vars:
+        PACKAGE_NAME: "com.parity.app" # Update this to your actual package name
+      node: v20.10.0
+      java: 17
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm
+      - name: Install dependencies
+        script: pnpm install
+      - name: Run Expo Prebuild
+        script: npx expo prebuild --platform android
+      - name: Build Android APK
+        script: |
+          cd android
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+    publishing:
+      email:
+        recipients:
+          - user@example.com # Update with your email
+        notify: success
+

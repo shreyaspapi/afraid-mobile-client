@@ -6,8 +6,40 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme as useDeviceColorScheme } from 'react-native';
+import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 
 type Theme = 'light' | 'dark' | 'auto';
+
+// Define custom themes with blue primary color instead of default purple
+const customLightTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#007aff',
+    onPrimary: '#ffffff',
+    primaryContainer: '#d1e4ff',
+    onPrimaryContainer: '#001d36',
+    secondary: '#535f70',
+    onSecondary: '#ffffff',
+    secondaryContainer: '#d7e3f7',
+    onSecondaryContainer: '#101c2b',
+  },
+};
+
+const customDarkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: '#0a84ff',
+    onPrimary: '#ffffff',
+    primaryContainer: '#003258',
+    onPrimaryContainer: '#d1e4ff',
+    secondary: '#bbc7db',
+    onSecondary: '#253140',
+    secondaryContainer: '#3b4858',
+    onSecondaryContainer: '#d7e3f7',
+  },
+};
 type ResolvedTheme = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -66,9 +98,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return null;
   }
 
+  const paperTheme = isDark ? customDarkTheme : customLightTheme;
+
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, isDark }}>
-      {children}
+      <PaperProvider theme={paperTheme}>
+        {children}
+      </PaperProvider>
     </ThemeContext.Provider>
   );
 }

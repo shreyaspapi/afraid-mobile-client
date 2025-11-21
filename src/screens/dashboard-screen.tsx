@@ -97,13 +97,30 @@ export function DashboardScreen() {
     );
   }
 
-  // Calculate disk usage percentage
-  const diskPercentage = arrayInfo
-    ? calculatePercentage(
-      Number(arrayInfo.capacity.disks.used),
-      Number(arrayInfo.capacity.disks.total)
-    )
-    : 0;
+  // Helper to safely parse capacity values that may come back as strings
+  const parseCapacityValue = (value: unknown): number => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    const numeric = Number(value);
+    if (!Number.isNaN(numeric)) return numeric;
+    // Fallback: extract leading numeric portion (handles values like "15.2 TB")
+    const match = String(value).match(/[\d.]+/);
+    return match ? Number(match[0]) || 0 : 0;
+  };
+
+  // Calculate disk usage percentage using capacity in kilobytes (more accurate than disk counts)
+  const capacityKb = arrayInfo?.capacity?.kilobytes;
+  const usedKb = capacityKb ? parseCapacityValue(capacityKb.used) : 0;
+  const totalKb = capacityKb ? parseCapacityValue(capacityKb.total) : 0;
+
+  const diskPercentage = usedKb && totalKb
+    ? calculatePercentage(usedKb, totalKb)
+    : arrayInfo
+      ? calculatePercentage(
+        Number(arrayInfo.capacity.disks.used),
+        Number(arrayInfo.capacity.disks.total)
+      )
+      : 0;
 
   // Calculate flash device usage
   const flashDisk = arrayInfo?.boot;
@@ -200,7 +217,13 @@ export function DashboardScreen() {
               label="ARRAY"
               value={diskPercentage.toFixed(0)}
               unit="%"
-              subtitle={arrayInfo ? formatBytes(Number(arrayInfo.capacity.disks.used) * 1024) : ''}
+              subtitle={
+                arrayInfo && usedKb
+                  ? formatBytes(usedKb * 1024)
+                  : arrayInfo
+                    ? formatBytes(Number(arrayInfo.capacity.disks.used) * 1024)
+                    : ''
+              }
               status={diskPercentage > 90 ? 'critical' : diskPercentage > 75 ? 'warning' : 'good'}
             />
           </View>
@@ -838,7 +861,10 @@ export function DashboardScreen() {
                   {t('dashboard.arrayDisks')} ({arrayInfo.disks.length})
                 </Text>
                 <Text style={[styles.compactSubtext, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
-                  {formatBytes(Number(arrayInfo.capacity.disks.used) * 1024)} {t('dashboard.of')} {formatBytes(Number(arrayInfo.capacity.disks.total) * 1024)} {t('dashboard.used')}
+                  {arrayInfo && usedKb && totalKb
+                    ? `${formatBytes(usedKb * 1024)} ${t('dashboard.of')} ${formatBytes(totalKb * 1024)} ${t('dashboard.used')}`
+                    : `${formatBytes(Number(arrayInfo.capacity.disks.used) * 1024)} ${t('dashboard.of')} ${formatBytes(Number(arrayInfo.capacity.disks.total) * 1024)} ${t('dashboard.used')}`
+                  }
                 </Text>
               </View>
               <Text style={[styles.expandIcon, { color: isDark ? '#007aff' : '#007aff' }]}>
