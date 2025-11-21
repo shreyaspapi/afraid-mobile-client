@@ -69,15 +69,15 @@ export function NotificationsScreen() {
   const { t } = useLocalization();
   const { pollingInterval } = usePollingInterval();
 
-  const [selectedType, setSelectedType] = useState<NotificationTypeValue>('UNREAD');
-  const [importanceFilter, setImportanceFilter] = useState<ImportanceFilter>('ALL');
+  const [selectedType, setSelectedType] = useState < NotificationTypeValue > ('UNREAD');
+  const [importanceFilter, setImportanceFilter] = useState < ImportanceFilter > ('ALL');
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     setIsDemoMode(DemoDataService.isDemoMode());
   }, []);
 
-  const filterInput = useMemo<NotificationFilterInput>(() => {
+  const filterInput = useMemo < NotificationFilterInput > (() => {
     const filter: NotificationFilterInput = {
       type: selectedType,
       offset: 0,
@@ -89,14 +89,14 @@ export function NotificationsScreen() {
     return filter;
   }, [selectedType, importanceFilter]);
 
-  const queryResult = useQuery<NotificationsQueryData>(GET_NOTIFICATIONS, {
+  const queryResult = useQuery < NotificationsQueryData > (GET_NOTIFICATIONS, {
     variables: { filter: filterInput },
     pollInterval: pollingInterval,
     notifyOnNetworkStatusChange: true,
     skip: isDemoMode,
   });
 
-  const demoData = useMemo<NotificationsQueryData | null>(() => {
+  const demoData = useMemo < NotificationsQueryData | null > (() => {
     if (!isDemoMode) {
       return null;
     }
@@ -119,10 +119,10 @@ export function NotificationsScreen() {
 
   const notificationsPayload = isDemoMode ? demoData?.notifications : queryResult.data?.notifications;
 
-  const [renderedNotifications, setRenderedNotifications] = useState<NotificationItem[]>(
+  const [renderedNotifications, setRenderedNotifications] = useState < NotificationItem[] > (
     () => notificationsPayload?.list ?? []
   );
-  const [overviewState, setOverviewState] = useState<NotificationOverview | null>(
+  const [overviewState, setOverviewState] = useState < NotificationOverview | null > (
     () => notificationsPayload?.overview ?? null
   );
 
@@ -216,7 +216,7 @@ export function NotificationsScreen() {
   const keyExtractor = useCallback((item: NotificationItem) => item.id, []);
 
   const renderNotificationItem = useCallback(({ item }: { item: NotificationItem }) => {
-    const importanceColor = IMPORTANCE_COLORS[item.importance];
+    const importanceColor = IMPORTANCE_COLORS[item.importance] || '#8e8e93';
     const timestamp =
       item.formattedTimestamp ??
       (item.timestamp ? new Date(item.timestamp).toLocaleString() : t('notifications.unknownTime'));
@@ -260,7 +260,7 @@ export function NotificationsScreen() {
             ]}
           >
             <Text style={[styles.importanceText, { color: importanceColor }]}>
-              {item.importance.toLowerCase()}
+              {(item.importance || 'INFO').toLowerCase()}
             </Text>
           </View>
         </View>
@@ -493,9 +493,7 @@ export function NotificationsScreen() {
           { backgroundColor: isDark ? '#000000' : '#f2f2f7' },
         ]}
         contentContainerStyle={styles.content}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-        }}
+
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
