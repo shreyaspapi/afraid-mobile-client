@@ -318,7 +318,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **[Unraid Forums](https://forums.unraid.net/)**
 - **Discord** (Coming soon)
-- **Twitter** (Coming soon)
+- **[Twitter](https://x.com/spapinwar)**
 
 ### Reporting Issues
 
