@@ -43,8 +43,10 @@
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <false/>
+      <true/>
       <key>NSAllowsLocalNetworking</key>
+      <true/>
+      <key>NSExceptionAllowsInsecureHTTPLoads</key>
       <true/>
     </dict>
     <key>NSUserActivityTypes</key>

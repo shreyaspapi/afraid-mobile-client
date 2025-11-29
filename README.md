@@ -9,7 +9,7 @@
 [![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB.svg?style=flat&logo=react&logoColor=white)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-[Features](#features) • [Installation](#installation) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
+[Features](#features) • [Installation](#installation) • [API Permissions](#required-api-permissions) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
 
 </div>
 
@@ -131,6 +131,80 @@ While Unraid 7.2+ offers a responsive web interface, **Parity** delivers a super
    ```
 
 4. **Configure firewall** (if needed) to allow connections on port 3001
+
+---
+
+## Required API Permissions
+
+When creating your API key, you need to grant the following permissions for Parity to function properly:
+
+### ✅ Required Permissions
+
+| Permission | Description | Used For |
+|------------|-------------|----------|
+| **`info`** | System Information | Dashboard: CPU, memory, OS info, uptime, hostname, kernel version |
+| **`metrics`** | System Metrics | Real-time CPU & RAM usage charts |
+| **`array`** | Array Status | Disk health, parity status, array capacity, boot device info |
+| **`shares`** | Share Information | Display share sizes and usage |
+| **`vars`** | Server Variables | Server name and Unraid version |
+| **`registration`** | License Info | Display license type and status |
+| **`docker`** | Docker Management | List containers, view status, start/stop containers |
+| **`vms`** | VM Management | List virtual machines, view status, start/stop VMs |
+| **`notifications`** | Notifications | View and manage server notifications |
+
+### ⚠️ Optional Control Permissions
+
+These permissions enable control features. Without them, you can still monitor but not control:
+
+| Permission | Description | Used For |
+|------------|-------------|----------|
+| **`array.setState`** | Array Control | Start/Stop the array from the app |
+| **`docker.start`** | Start Containers | Start Docker containers |
+| **`docker.stop`** | Stop Containers | Stop Docker containers |
+| **`vm.start`** | Start VMs | Start virtual machines |
+| **`vm.stop`** | Stop VMs | Stop virtual machines |
+
+### Creating an API Key with All Required Permissions
+
+**Option 1: Full Access (Recommended for personal use)**
+```bash
+unraid-api apikey --create --name "Parity App" --description "Mobile app access"
+```
+
+**Option 2: Specific Permissions (For restricted access)**
+```bash
+unraid-api apikey --create --name "Parity App" \
+  --scope info \
+  --scope metrics \
+  --scope array \
+  --scope shares \
+  --scope vars \
+  --scope registration \
+  --scope docker \
+  --scope vms \
+  --scope notifications
+```
+
+### Troubleshooting Permission Issues
+
+If you see errors like "Permission denied" or certain features don't work:
+
+1. **Check your API key permissions:**
+   ```bash
+   unraid-api apikey --list
+   ```
+
+2. **Delete and recreate with proper permissions:**
+   ```bash
+   unraid-api apikey --delete --name "Parity App"
+   unraid-api apikey --create --name "Parity App"
+   ```
+
+3. **Verify API is running:**
+   ```bash
+   systemctl status unraid-api
+   systemctl restart unraid-api  # If needed
+   ```
 
 ---
 

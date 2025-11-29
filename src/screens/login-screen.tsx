@@ -132,7 +132,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
         <View style={styles.content}>
           <View style={styles.header}>
             <Image
-              source={require('@/assets/images/splash-icon.png')}
+              source={require('@/assets/images/icon.png')}
               style={styles.logo}
               contentFit="contain"
             />
@@ -275,7 +275,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
-            source={require('@/assets/images/splash-icon.png')}
+            source={require('@/assets/images/icon.png')}
             style={styles.logo}
             contentFit="contain"
           />
