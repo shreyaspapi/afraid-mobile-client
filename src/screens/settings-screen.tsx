@@ -301,15 +301,23 @@ export function SettingsScreen() {
   if (Platform.OS === 'ios' && UiHost) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000000' : '#f2f2f7' }]} edges={['top']}>
-        <UiHost style={{ flex: 1 }}>
+        <UiHost style={{ flex: 1 }} colorScheme={isDark ? 'dark' : 'light'}>
           <UiForm>
             <UiSection title="Appearance">
               <UiHStack spacing={8}>
                 <UiImage systemName="aqi.medium" />
-                <UiText size={17}>Appearance</UiText>
+                <UiText size={17}>{t('settings.automatic')}</UiText>
                 <UiSpacer />
-                <UiSwitch value={isDark} onValueChange={() => {}} />
+                <UiSwitch value={theme === 'auto'} onValueChange={handleAutoModeToggle} />
               </UiHStack>
+              {theme !== 'auto' && (
+                <UiHStack spacing={8}>
+                  <UiImage systemName="moon.fill" />
+                  <UiText size={17}>{t('settings.darkMode')}</UiText>
+                  <UiSpacer />
+                  <UiSwitch value={theme === 'dark'} onValueChange={handleDarkModeToggle} />
+                </UiHStack>
+              )}
             </UiSection>
 
             <UiSection title={t('settings.language') || 'Language'}>

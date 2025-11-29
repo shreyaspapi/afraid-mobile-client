@@ -147,7 +147,7 @@ export function ServerManagementScreen() {
           </Card>
         </View>
         {/* SwiftUI list for saved servers */}
-        <UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>
+        <UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} colorScheme={isDark ? 'dark' : 'light'}>
           <UiForm>
             <UiSection title="Saved Servers">
               {servers.length === 0 ? (

@@ -16,6 +16,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -27,16 +28,44 @@ import {
   Divider as PaperDivider,
   Text as PaperText,
   TextInput as PaperTextInput,
+  SegmentedButtons,
   useTheme as usePaperTheme,
 } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Conditionally import native SwiftUI components only on iOS
+let UiForm: any;
+let UiHost: any;
+let UiSection: any;
+let UiTextField: any;
+let UiSecureField: any;
+let UiPicker: any;
+
+if (Platform.OS === 'ios') {
+  const swiftUIModule = require('@expo/ui/swift-ui');
+  UiForm = swiftUIModule.Form;
+  UiHost = swiftUIModule.Host;
+  UiSection = swiftUIModule.Section;
+  UiTextField = swiftUIModule.TextField;
+  UiSecureField = swiftUIModule.SecureField;
+  UiPicker = swiftUIModule.Picker;
+}
 
 interface LoginScreenProps {
   onSuccess: () => void;
 }
 
+// Protocol options
+const PROTOCOL_OPTIONS = [
+  { label: 'No SSL', value: 'http', prefix: 'http://' },
+  { label: 'SSL', value: 'https', prefix: 'https://' },
+  { label: 'Self-Signed', value: 'https-selfsigned', prefix: 'https://' },
+];
+
 export function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [serverIP, setServerIP] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [protocolIndex, setProtocolIndex] = useState(0); // Default to HTTP
   const [loading, setLoading] = useState(false);
   const [showDemoAlert, setShowDemoAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
@@ -59,13 +88,27 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
     return true;
   };
 
+  // Build the full server URL with protocol and /graphql endpoint
+  const buildServerUrl = (ip: string): string => {
+    let cleanIP = ip.trim()
+      .replace(/^https?:\/\//, '') // Remove any existing protocol
+      .replace(/\/+$/, ''); // Remove trailing slashes
+    
+    // Remove /graphql if user added it (we'll add it back)
+    cleanIP = cleanIP.replace(/\/graphql\/?$/i, '');
+    
+    const protocol = PROTOCOL_OPTIONS[protocolIndex];
+    return `${protocol.prefix}${cleanIP}/graphql`;
+  };
+
   const handleLogin = async () => {
     if (!validateInputs()) return;
 
     setLoading(true);
     try {
+      const fullServerUrl = buildServerUrl(serverIP);
       const credentials: UnraidCredentials = {
-        serverIP: serverIP.trim(),
+        serverIP: fullServerUrl,
         apiKey: apiKey.trim(),
       };
 
@@ -123,7 +166,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
   if (Platform.OS !== 'ios') {
     return (
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="height"
         style={[
           styles.container,
           { backgroundColor: paperTheme.colors.background },
@@ -145,10 +188,27 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
           </View>
 
           <View style={styles.form}>
+            <PaperText variant="labelLarge" style={{ color: paperTheme.colors.onSurfaceVariant, marginBottom: 8 }}>
+              Connection Type
+            </PaperText>
+            <SegmentedButtons
+              value={PROTOCOL_OPTIONS[protocolIndex].value}
+              onValueChange={(value) => {
+                const index = PROTOCOL_OPTIONS.findIndex(p => p.value === value);
+                if (index !== -1) setProtocolIndex(index);
+              }}
+              buttons={[
+                { value: 'http', label: 'No SSL' },
+                { value: 'https', label: 'SSL' },
+                { value: 'https', label: 'Self-Signed' },
+              ]}
+              style={{ marginBottom: 16 }}
+            />
+
             <PaperTextInput
               mode="outlined"
               label={t('login.serverIP')}
-              placeholder="http://192.168.1.x"
+              placeholder="192.168.1.x:PORT or tower.local"
               value={serverIP}
               onChangeText={setServerIP}
               autoCapitalize="none"
@@ -264,6 +324,128 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
     );
   }
 
+  // iOS: Native SwiftUI UI
+  if (Platform.OS === 'ios' && UiHost) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top', 'bottom']}>
+        <ScrollView 
+          style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header with logo */}
+          <View style={styles.iosHeader}>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.iosLogo}
+              contentFit="contain"
+            />
+            <Text style={[styles.iosTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              {t('login.title')}
+            </Text>
+            <Text style={[styles.iosSubtitle, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              {t('login.subtitle')}
+            </Text>
+          </View>
+
+          {/* Connection Type Picker - outside form for clean look */}
+          <View style={styles.iosPickerContainer}>
+            <Text style={[styles.iosPickerLabel, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+              CONNECTION TYPE
+            </Text>
+            <UiHost style={{ height: 44 }} colorScheme={isDark ? 'dark' : 'light'}>
+              <UiPicker
+                options={PROTOCOL_OPTIONS.map(p => p.label)}
+                selectedIndex={protocolIndex}
+                onOptionSelected={(e: { nativeEvent: { index: number } }) => setProtocolIndex(e.nativeEvent.index)}
+                variant="segmented"
+              />
+            </UiHost>
+            <Text style={[styles.iosPickerHint, { color: isDark ? '#48484a' : '#8e8e93' }]}>
+              Choose how to connect to your Unraid server
+            </Text>
+          </View>
+
+          {/* SwiftUI Form - only for input fields */}
+          <View style={{ minHeight: 280 }}>
+            <UiHost style={{ flex: 1 }} colorScheme={isDark ? 'dark' : 'light'}>
+              <UiForm>
+                <UiSection title={t('login.serverIP')} footer={t('login.serverIPHint')}>
+                  <UiTextField
+                    placeholder="192.168.1.x:PORT or tower.local"
+                    defaultValue={serverIP}
+                    onChangeText={setServerIP}
+                    keyboardType="url"
+                    autocorrection={false}
+                  />
+                </UiSection>
+
+                <UiSection title={t('login.apiKey')} footer={t('login.apiKeyHint')}>
+                  <UiSecureField
+                    placeholder="••••••••••••••••"
+                    defaultValue={apiKey}
+                    onChangeText={setApiKey}
+                  />
+                </UiSection>
+              </UiForm>
+            </UiHost>
+          </View>
+
+          {/* Buttons - outside form, no card background */}
+          <View style={styles.iosButtonsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.iosConnectButton,
+                { backgroundColor: loading ? '#48484a' : '#007aff' },
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.iosConnectButtonText}>{t('login.connect')}</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.iosDividerContainer}>
+              <View style={[styles.iosDividerLine, { backgroundColor: isDark ? '#38383a' : '#c7c7cc' }]} />
+              <Text style={[styles.iosDividerText, { color: isDark ? '#8e8e93' : '#6e6e73' }]}>
+                {t('login.or')}
+              </Text>
+              <View style={[styles.iosDividerLine, { backgroundColor: isDark ? '#38383a' : '#c7c7cc' }]} />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.iosDemoButton,
+                {
+                  borderColor: isDark ? '#48484a' : '#007aff',
+                },
+              ]}
+              onPress={handleDemoMode}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.iosDemoButtonText, { color: '#007aff' }]}>
+                {t('login.tryDemo')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.iosFooter}>
+            <Text style={[styles.iosFooterText, { color: isDark ? '#48484a' : '#8e8e93' }]}>
+              {t('login.footer')}
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Fallback for non-iOS (shouldn't reach here due to earlier check, but just in case)
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -383,54 +565,6 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
           </Text>
         </View>
       </View>
-
-      {Platform.OS === 'web' && (
-        <AlertDialog
-          visible={showDemoAlert}
-          title={t('login.demoModeTitle')}
-          message={t('login.demoModeMessage')}
-          buttons={[
-            { text: t('common.cancel'), style: 'cancel', onPress: () => setShowDemoAlert(false) },
-            {
-              text: t('login.demoModeButton'),
-              style: 'default',
-              onPress: async () => {
-                setLoading(true);
-                try {
-                  console.log('Login: Enabling demo mode...');
-                  // Enable demo mode
-                  await storageService.setDemoMode(true);
-                  console.log('Login: Demo mode enabled, triggering auth check...');
-                  
-                  // Trigger app reload with demo data
-                  onSuccess();
-                  console.log('Login: Auth check triggered');
-                } catch (error: any) {
-                  console.error('Login: Failed to enable demo mode:', error);
-                  setShowDemoAlert(false);
-                  setErrorMessage(error?.message || t('login.demoModeError'));
-                  setShowErrorAlert(true);
-                } finally {
-                  setLoading(false);
-                }
-              }
-            }
-          ]}
-          onDismiss={() => setShowDemoAlert(false)}
-        />
-      )}
-
-      {Platform.OS === 'web' && (
-        <AlertDialog
-          visible={showErrorAlert}
-          title={t('common.error')}
-          message={errorMessage}
-          buttons={[
-            { text: t('common.ok') || 'OK', style: 'default', onPress: () => setShowErrorAlert(false) }
-          ]}
-          onDismiss={() => setShowErrorAlert(false)}
-        />
-      )}
     </KeyboardAvoidingView>
   );
 }
@@ -545,6 +679,103 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     opacity: 0.6,
+  },
+  // iOS Native SwiftUI styles
+  iosHeader: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+  },
+  iosLogo: {
+    width: 88,
+    height: 88,
+    marginBottom: 20,
+    borderRadius: 20,
+  },
+  iosTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  iosSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    maxWidth: 280,
+    lineHeight: 22,
+  },
+  iosPickerContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  iosPickerLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  iosPickerHint: {
+    fontSize: 13,
+    marginTop: 8,
+    marginLeft: 4,
+  },
+  iosButtonsContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  iosConnectButton: {
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iosConnectButtonText: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  iosDividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+    paddingHorizontal: 8,
+  },
+  iosDividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  iosDividerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    paddingHorizontal: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  iosDemoButton: {
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  iosDemoButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  iosFooter: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    marginTop: 'auto',
+  },
+  iosFooterText: {
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });
 

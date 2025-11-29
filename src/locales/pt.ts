@@ -24,7 +24,7 @@ export default {
     subtitle: 'Digite os detalhes do seu servidor para começar',
     serverIP: 'Endereço IP do servidor',
     serverIPPlaceholder: 'http://192.168.21.1:3001/graphql',
-    serverIPHint: 'Digite a URL completa (ex., http://192.168.21.1:3001/graphql)',
+    serverIPHint: 'Digite o endereço IP e porta (ex., 192.168.1.100:3001)',
     apiKey: 'Chave da API',
     apiKeyPlaceholder: 'Digite sua chave da API',
     apiKeyHint: 'Gere uma chave da API usando: unraid-api apikey --create',

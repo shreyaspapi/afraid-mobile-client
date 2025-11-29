@@ -24,7 +24,7 @@ export default {
     subtitle: '输入您的服务器详细信息以开始',
     serverIP: '服务器 IP 地址',
     serverIPPlaceholder: 'http://192.168.21.1:3001/graphql',
-    serverIPHint: '输入完整的 URL（例如，http://192.168.21.1:3001/graphql）',
+    serverIPHint: '输入IP地址和端口（例如，192.168.1.100:3001）',
     apiKey: 'API 密钥',
     apiKeyPlaceholder: '输入您的 API 密钥',
     apiKeyHint: '使用以下命令生成 API 密钥：unraid-api apikey --create',

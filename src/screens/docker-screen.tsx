@@ -217,7 +217,7 @@ export function DockerScreen() {
   if (Platform.OS === 'ios' && UiHost) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} edges={['top']}>
-        <UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }}>
+        <UiHost style={{ flex: 1, backgroundColor: isDark ? '#000000' : '#f2f2f7' }} colorScheme={isDark ? 'dark' : 'light'}>
           <UiForm>
             <UiSection>
               <UiVStack alignment="leading" spacing={20} modifiers={[padding({ all: 24 })]}>

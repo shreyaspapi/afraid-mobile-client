@@ -24,7 +24,7 @@ export default {
     subtitle: '開始するにはサーバーの詳細を入力してください',
     serverIP: 'サーバー IP アドレス',
     serverIPPlaceholder: 'http://192.168.21.1:3001/graphql',
-    serverIPHint: '完全な URL を入力してください（例：http://192.168.21.1:3001/graphql）',
+    serverIPHint: 'IPアドレスとポートを入力してください（例：192.168.1.100:3001）',
     apiKey: 'API キー',
     apiKeyPlaceholder: 'API キーを入力',
     apiKeyHint: 'API キーを生成：unraid-api apikey --create',
