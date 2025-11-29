@@ -1,7 +1,6 @@
 /**
- * Card Component
- * Reusable card container for displaying grouped information
- * Platform-aware: Native styling on iOS, Material Design on Android/Web
+ * PlatformCard Component
+ * Uses React Native Paper Card on Android/Web, native styling on iOS
  */
 
 import { useTheme } from '@/src/providers/theme-provider';
@@ -9,14 +8,14 @@ import React from 'react';
 import { Platform, StyleSheet, View, ViewStyle } from 'react-native';
 import { Card as PaperCard, useTheme as usePaperTheme } from 'react-native-paper';
 
-interface CardProps {
+interface PlatformCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   onPress?: () => void;
   mode?: 'elevated' | 'outlined' | 'contained';
 }
 
-export function Card({ children, style, onPress, mode = 'elevated' }: CardProps) {
+export function PlatformCard({ children, style, onPress, mode = 'elevated' }: PlatformCardProps) {
   const { isDark } = useTheme();
   const paperTheme = usePaperTheme();
 
@@ -43,10 +42,16 @@ export function Card({ children, style, onPress, mode = 'elevated' }: CardProps)
     return (
       <PaperCard
         mode={mode}
-        style={[styles.paperCard, { backgroundColor: paperTheme.colors.surface }, style]}
+        style={[
+          styles.paperCard,
+          {
+            backgroundColor: paperTheme.colors.surface,
+          },
+          style,
+        ]}
         onPress={onPress}
       >
-        <PaperCard.Content style={styles.paperCardContent}>{children}</PaperCard.Content>
+        <PaperCard.Content>{children}</PaperCard.Content>
       </PaperCard>
     );
   }
@@ -54,31 +59,34 @@ export function Card({ children, style, onPress, mode = 'elevated' }: CardProps)
   return (
     <PaperCard
       mode={mode}
-      style={[styles.paperCard, { backgroundColor: paperTheme.colors.surface }, style]}
+      style={[
+        styles.paperCard,
+        {
+          backgroundColor: paperTheme.colors.surface,
+        },
+        style,
+      ]}
     >
-      <PaperCard.Content style={styles.paperCardContent}>{children}</PaperCard.Content>
+      <PaperCard.Content>{children}</PaperCard.Content>
     </PaperCard>
   );
 }
 
 const styles = StyleSheet.create({
   iosCard: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3.84,
     elevation: 5,
   },
   paperCard: {
     marginBottom: 16,
     borderRadius: 16,
   },
-  paperCardContent: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
 });
+

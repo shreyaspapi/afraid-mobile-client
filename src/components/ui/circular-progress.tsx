@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   circleContainer: {
     position: 'relative',
@@ -109,12 +110,13 @@ const styles = StyleSheet.create({
   },
   percentage: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   label: {
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: 13,
+    marginTop: 10,
     textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

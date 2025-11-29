@@ -111,6 +111,8 @@ export default {
   docker: {
     title: 'Docker',
     loadingMessage: 'Loading containers...',
+    manageContainers: 'Manage your containers',
+    searchContainers: 'Search containers...',
     noContainers: 'No containers found',
     noContainersDetected: 'No containers detected',
     combinedContainers: 'Combined containers',
@@ -137,6 +139,8 @@ export default {
   vms: {
     title: 'Virtual Machines',
     loadingMessage: 'Loading virtual machines...',
+    manageVMs: 'Manage your virtual machines',
+    searchVMs: 'Search virtual machines...',
     noVMs: 'No VMs found',
     noVMsDetected: 'No virtual machines detected',
     discoveredGuests: 'Discovered guests',
@@ -160,7 +164,9 @@ export default {
   // Server Management Screen
   servers: {
     title: 'Servers',
+    description: 'Manage your saved Unraid servers',
     addServer: 'Add Server',
+    addNewServer: 'Add New Server',
     name: 'Name',
     namePlaceholder: 'My Unraid',
     serverUrl: 'Server URL',
@@ -169,10 +175,12 @@ export default {
     apiKeyPlaceholder: 'API key',
     savedServers: 'Saved Servers',
     noSavedServers: 'No saved servers',
+    noSavedServersDescription: 'Add your first server above',
     makeActive: 'Make Active',
     remove: 'Remove',
     removeServerTitle: 'Remove Server',
     removeServerMessage: 'Are you sure you want to remove',
+    removeServerConfirm: 'This action cannot be undone.',
   },
 
   // Notifications Screen
@@ -235,6 +243,7 @@ export default {
     manualRefresh: 'Manual Refresh',
     pullToRefresh: 'Pull to refresh',
     clearCache: 'Clear Cache',
+    clearCacheDescription: 'This will clear all cached data and refresh from the server.',
     loggingOut: 'Logging out...',
     unraidMobileApp: 'Unraid Mobile App',
     builtWith: 'Built with React Native & Expo',

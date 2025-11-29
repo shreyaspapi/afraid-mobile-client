@@ -83,26 +83,27 @@ export function ProgressBar({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginVertical: 10,
   },
   labelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   label: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
   },
   percentage: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
   track: {
-    borderRadius: 4,
+    borderRadius: 6,
     overflow: 'hidden',
   },
   fill: {
-    borderRadius: 4,
+    borderRadius: 6,
   },
 });
 

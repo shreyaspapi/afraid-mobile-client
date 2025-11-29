@@ -108,6 +108,8 @@ export default {
   docker: {
     title: 'Docker',
     loadingMessage: '正在加载容器...',
+    manageContainers: '管理您的容器',
+    searchContainers: '搜索容器...',
     noContainers: '未找到容器',
     noContainersDetected: '未检测到容器',
     combinedContainers: '组合容器',
@@ -134,6 +136,8 @@ export default {
   vms: {
     title: '虚拟机',
     loadingMessage: '正在加载虚拟机...',
+    manageVMs: '管理您的虚拟机',
+    searchVMs: '搜索虚拟机...',
     noVMs: '未找到虚拟机',
     noVMsDetected: '未检测到虚拟机',
     discoveredGuests: '已发现的客户机',
@@ -157,7 +161,9 @@ export default {
   // Server Management Screen
   servers: {
     title: '服务器',
+    description: '管理您保存的 Unraid 服务器',
     addServer: '添加服务器',
+    addNewServer: '添加新服务器',
     name: '名称',
     namePlaceholder: '我的 Unraid',
     serverUrl: '服务器 URL',
@@ -166,10 +172,12 @@ export default {
     apiKeyPlaceholder: 'API 密钥',
     savedServers: '已保存的服务器',
     noSavedServers: '没有已保存的服务器',
+    noSavedServersDescription: '在上方添加您的第一个服务器',
     makeActive: '激活',
     remove: '删除',
     removeServerTitle: '删除服务器',
     removeServerMessage: '您确定要删除吗',
+    removeServerConfirm: '此操作无法撤销。',
   },
 
   // Notifications Screen

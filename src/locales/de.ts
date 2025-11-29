@@ -108,6 +108,8 @@ export default {
   docker: {
     title: 'Docker',
     loadingMessage: 'Container laden...',
+    manageContainers: 'Verwalten Sie Ihre Container',
+    searchContainers: 'Container suchen...',
     noContainers: 'Keine Container gefunden',
     noContainersDetected: 'Keine Container erkannt',
     combinedContainers: 'Kombinierte Container',
@@ -134,6 +136,8 @@ export default {
   vms: {
     title: 'Virtuelle Maschinen',
     loadingMessage: 'Virtuelle Maschinen laden...',
+    manageVMs: 'Verwalten Sie Ihre virtuellen Maschinen',
+    searchVMs: 'Virtuelle Maschinen suchen...',
     noVMs: 'Keine VMs gefunden',
     noVMsDetected: 'Keine virtuellen Maschinen erkannt',
     discoveredGuests: 'Entdeckte Gäste',
@@ -157,7 +161,9 @@ export default {
   // Server Management Screen
   servers: {
     title: 'Server',
+    description: 'Verwalten Sie Ihre gespeicherten Unraid-Server',
     addServer: 'Server hinzufügen',
+    addNewServer: 'Neuen Server hinzufügen',
     name: 'Name',
     namePlaceholder: 'Mein Unraid',
     serverUrl: 'Server-URL',
@@ -166,10 +172,12 @@ export default {
     apiKeyPlaceholder: 'API-Schlüssel',
     savedServers: 'Gespeicherte Server',
     noSavedServers: 'Keine gespeicherten Server',
+    noSavedServersDescription: 'Fügen Sie Ihren ersten Server oben hinzu',
     makeActive: 'Aktivieren',
     remove: 'Entfernen',
     removeServerTitle: 'Server entfernen',
     removeServerMessage: 'Sind Sie sicher, dass Sie entfernen möchten',
+    removeServerConfirm: 'Diese Aktion kann nicht rückgängig gemacht werden.',
   },
 
   // Notifications Screen

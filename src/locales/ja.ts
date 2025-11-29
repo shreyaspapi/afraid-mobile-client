@@ -108,6 +108,8 @@ export default {
   docker: {
     title: 'Docker',
     loadingMessage: 'コンテナを読み込み中...',
+    manageContainers: 'コンテナを管理',
+    searchContainers: 'コンテナを検索...',
     noContainers: 'コンテナが見つかりません',
     noContainersDetected: 'コンテナが検出されません',
     combinedContainers: '結合されたコンテナ',
@@ -134,6 +136,8 @@ export default {
   vms: {
     title: '仮想マシン',
     loadingMessage: '仮想マシンを読み込み中...',
+    manageVMs: '仮想マシンを管理',
+    searchVMs: '仮想マシンを検索...',
     noVMs: 'VM が見つかりません',
     noVMsDetected: '仮想マシンが検出されません',
     discoveredGuests: '検出されたゲスト',
@@ -157,7 +161,9 @@ export default {
   // Server Management Screen
   servers: {
     title: 'サーバー',
+    description: '保存された Unraid サーバーを管理',
     addServer: 'サーバーを追加',
+    addNewServer: '新しいサーバーを追加',
     name: '名前',
     namePlaceholder: '私の Unraid',
     serverUrl: 'サーバー URL',
@@ -166,10 +172,12 @@ export default {
     apiKeyPlaceholder: 'API キー',
     savedServers: '保存されたサーバー',
     noSavedServers: '保存されたサーバーはありません',
+    noSavedServersDescription: '上記で最初のサーバーを追加してください',
     makeActive: 'アクティブにする',
     remove: '削除',
     removeServerTitle: 'サーバーを削除',
     removeServerMessage: '削除してもよろしいですか',
+    removeServerConfirm: 'この操作は取り消すことができません。',
   },
 
   // Notifications Screen

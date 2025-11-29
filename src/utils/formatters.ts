@@ -18,6 +18,52 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 }
 
 /**
+ * Format disk size intelligently - handles both KB and byte inputs from the API
+ * The Unraid API documentation says size is in KB, but some versions return bytes
+ * This function auto-detects based on the magnitude of the value
+ *
+ * Heuristic:
+ * - If value > 10^12 (1 trillion), assume it's already in bytes (typical for TB disks in bytes)
+ * - Otherwise, assume it's in KB and multiply by 1024
+ *
+ * For reference:
+ * - 1 TB in bytes = ~1,000,000,000,000 (10^12)
+ * - 1 TB in KB = ~1,000,000,000 (10^9)
+ */
+export function formatDiskSize(sizeValue: number | string | null | undefined, decimals: number = 2): string {
+  if (sizeValue === null || sizeValue === undefined) return '0 Bytes';
+
+  const size = typeof sizeValue === 'string' ? Number(sizeValue) : sizeValue;
+
+  if (isNaN(size) || size === 0) return '0 Bytes';
+
+  // Threshold: values above 10^12 are likely already in bytes
+  // (A 1TB disk would be 1,000,000,000,000 bytes or 1,000,000,000 KB)
+  const BYTE_THRESHOLD = 1e12;
+
+  // If value is very large, it's probably already in bytes
+  // If smaller, it's probably in KB (as documented) and needs conversion
+  const bytes = size >= BYTE_THRESHOLD ? size : size * 1024;
+
+  return formatBytes(bytes, decimals);
+}
+
+/**
+ * Format capacity from the array capacity object
+ * The kilobytes capacity uses KB as the unit
+ */
+export function formatCapacityKB(kbValue: number | string | null | undefined, decimals: number = 2): string {
+  if (kbValue === null || kbValue === undefined) return '0 Bytes';
+
+  const kb = typeof kbValue === 'string' ? Number(kbValue) : kbValue;
+
+  if (isNaN(kb) || kb === 0) return '0 Bytes';
+
+  // capacity.kilobytes is always in KB
+  return formatBytes(kb * 1024, decimals);
+}
+
+/**
  * Format uptime in seconds to human-readable format
  * Can handle both seconds (number) and ISO date strings
  */

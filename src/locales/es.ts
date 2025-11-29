@@ -108,6 +108,8 @@ export default {
   docker: {
     title: 'Docker',
     loadingMessage: 'Cargando contenedores...',
+    manageContainers: 'Administra tus contenedores',
+    searchContainers: 'Buscar contenedores...',
     noContainers: 'No se encontraron contenedores',
     noContainersDetected: 'No se detectaron contenedores',
     combinedContainers: 'Contenedores combinados',
@@ -134,6 +136,8 @@ export default {
   vms: {
     title: 'Máquinas virtuales',
     loadingMessage: 'Cargando máquinas virtuales...',
+    manageVMs: 'Administra tus máquinas virtuales',
+    searchVMs: 'Buscar máquinas virtuales...',
     noVMs: 'No se encontraron VMs',
     noVMsDetected: 'No se detectaron máquinas virtuales',
     discoveredGuests: 'Invitados descubiertos',
@@ -159,7 +163,9 @@ export default {
   // Server Management Screen
   servers: {
     title: 'Servidores',
+    description: 'Administra tus servidores Unraid guardados',
     addServer: 'Agregar servidor',
+    addNewServer: 'Agregar nuevo servidor',
     name: 'Nombre',
     namePlaceholder: 'Mi Unraid',
     serverUrl: 'URL del servidor',
@@ -168,10 +174,12 @@ export default {
     apiKeyPlaceholder: 'Clave API',
     savedServers: 'Servidores guardados',
     noSavedServers: 'No hay servidores guardados',
+    noSavedServersDescription: 'Agrega tu primer servidor arriba',
     makeActive: 'Hacer activo',
     remove: 'Eliminar',
     removeServerTitle: 'Eliminar servidor',
     removeServerMessage: '¿Estás seguro de que quieres eliminar',
+    removeServerConfirm: 'Esta acción no se puede deshacer.',
   },
 
   // Notifications Screen

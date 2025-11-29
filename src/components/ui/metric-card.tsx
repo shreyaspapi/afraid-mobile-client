@@ -72,20 +72,21 @@ export function MetricCard({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 12,
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     minWidth: 100,
   },
   iconContainer: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   valueContainer: {
     flexDirection: 'row',
@@ -93,16 +94,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   value: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
   },
   unit: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
   },
   subtitle: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 12,
+    marginTop: 8,
   },
 });
 

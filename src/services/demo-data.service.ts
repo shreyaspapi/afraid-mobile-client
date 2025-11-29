@@ -4,9 +4,9 @@
  */
 
 import type {
-    GetDashboardDataQuery,
-    GetDockerContainersQuery,
-    GetVmsQuery,
+  GetDashboardDataQuery,
+  GetDockerContainersQuery,
+  GetVmsQuery,
 } from '@/src/graphql/generated';
 
 export const DEMO_DASHBOARD_DATA: GetDashboardDataQuery = {
@@ -19,9 +19,10 @@ export const DEMO_DASHBOARD_DATA: GetDashboardDataQuery = {
       __typename: 'ArrayCapacity',
       kilobytes: {
         __typename: 'Capacity',
-        free: '15.2 TB',
-        used: '8.8 TB',
-        total: '24.0 TB',
+        // Values in KB: 24 TB = ~25.77 billion KB, 8.8 TB = ~9.45 billion KB, 15.2 TB = ~16.32 billion KB
+        free: '16320875725',
+        used: '9448928051',
+        total: '25769803776',
       },
       disks: {
         __typename: 'Capacity',
